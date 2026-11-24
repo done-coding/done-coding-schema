@@ -18,7 +18,7 @@ export const baseName = (file) => file.slice(0, -SCHEMA_SUFFIX.length);
 
 /**
  * 按文件名排序读出全部定义。
- * @returns {{file: string, schema: Record<string, any>}[]}
+ * @returns {{file: string, schema: Record<string, any>, text: string}[]}
  */
 export function loadSchemas() {
   return fs
@@ -26,13 +26,12 @@ export function loadSchemas() {
     .filter((file) => file.endsWith(SCHEMA_SUFFIX))
     .sort()
     .map((file) => {
-      const schema = JSON.parse(
-        fs.readFileSync(path.join(SCHEMAS_DIR, file), "utf8"),
-      );
+      const text = fs.readFileSync(path.join(SCHEMAS_DIR, file), "utf8");
+      const schema = JSON.parse(text);
       if (schema.$id !== file) {
         throw new Error(`${file}: $id 必须等于文件名，实际为 ${schema.$id}`);
       }
-      return { file, schema };
+      return { file, schema, text };
     });
 }
 

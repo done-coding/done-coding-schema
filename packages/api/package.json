@@ -9,15 +9,18 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
       "import": "./es/index.mjs",
-      "require": "./lib/index.cjs",
-      "types": "./types/index.d.ts"
-    }
+      "require": "./lib/index.cjs"
+    },
+    "./schemas/*": "./schemas/*",
+    "./package.json": "./package.json"
   },
   "files": [
     "es",
     "lib",
-    "types"
+    "types",
+    "schemas"
   ],
   "scripts": {
     "serve": "vite",
@@ -25,6 +28,7 @@
     "dev": "vite build -w -m hotBuild",
     "prebuild": "dc-inject",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
     "prepack": "pnpm build",
     "log": "conventional-changelog -p angular -i CHANGELOG.md -s --release-count 0",
     "test": "vitest",

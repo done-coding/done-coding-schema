@@ -1,8 +1,10 @@
-# AI 指令 — template-npm-common
+# AI 指令 — @done-coding/schema-api
 
 ## 定位
 
-通用 npm 包模板（Vite 库构建，面向浏览器 / 通用环境）。
+npm 包：导出由仓根 `schemas/` 的定义生成的 TS 类型、业务码与字段路径常量，以及定义文件本身（Vite 库构建，面向浏览器 / 通用环境）。
+
+`src/generated/` 与 `schemas/` 是生成物，改定义后在仓根运行 `pnpm gen`，[MUST NOT] 手改；`src/generics.ts` 是手写的薄泛型包装，与生成类型的一致性由 `test/generics.type-test.ts` 核对。
 
 ## 包管理器
 
@@ -21,6 +23,7 @@ node -v && pnpm -v
 | 开发（watch 构建） | `pnpm dev` |
 | 本地调试 | `pnpm serve`（vite） |
 | 构建 | `pnpm build`（vite build） |
+| 类型检查 | `pnpm typecheck`（含 `test/` 下的类型层面用例） |
 | 测试 / 覆盖率 | `pnpm test` / `pnpm coverage` |
 | 发布 | `pnpm push`（dc-publish） |
 

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paged-list.schema.json",
+  "title": "PagedList",
+  "description": "页码式列表，作成功外壳的 data：给人翻页的表格，能跳页、有总数。顶层允许接口自己声明的附带字段，但不得重复表达翻页信息；不带 cursor。",
+  "x-pathConstants": "PAGED_LIST_RESPONSE_PATHS",
+  "type": "object",
+  "properties": {
+    "items": {
+      "description": "当前页的数据。",
+      "type": "array"
+    },
+    "page": { "$ref": "#/$defs/page" },
+    "cursor": false
+  },
+  "required": ["items", "page"],
+  "$defs": {
+    "page": {
+      "title": "PagedListPage",
+      "description": "翻页信息。不回传当前页码。totalPage 等于 ceil(totalRecord / pageSize)，总数为 0 时为 0（x-totalPageEqualsCeil）。",
+      "type": "object",
+      "properties": {
+        "totalRecord": {
+          "description": "总条数。",
+          "type": "integer",
+          "minimum": 0
+        },
+        "pageSize": {
+          "description": "每页条数，回显请求值。",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "totalPage": {
+          "description": "总页数。",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["totalRecord", "pageSize", "totalPage"],
+      "additionalProperties": false,
+      "if": {
+        "properties": { "totalRecord": { "const": 0 } },
+        "required": ["totalRecord"]
+      },
+      "then": {
+        "properties": { "totalPage": { "const": 0 } }
+      },
+      "x-totalPageEqualsCeil": true
+    }
+  }
+}

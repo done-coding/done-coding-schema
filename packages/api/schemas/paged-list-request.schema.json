@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paged-list-request.schema.json",
+  "title": "PagedListRequest",
+  "description": "页码式列表的请求参数。线上以 page. 前缀的查询参数传递（如 page.pageSize=20），本定义约束解码后的对象；前缀下未声明的参数不合法。",
+  "x-paramPrefix": "page",
+  "x-pathConstants": "PAGED_LIST_REQUEST_PARAMS",
+  "type": "object",
+  "properties": {
+    "page": {
+      "description": "页码，从 1 开始。",
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "pageSize": {
+      "description": "每页条数。",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10
+    },
+    "query": {
+      "description": "模糊搜索词，最多 200 个字符。",
+      "type": "string",
+      "maxLength": 200
+    },
+    "orderBy": {
+      "description": "排序：逗号分隔，每段是小驼峰字段名，后面可跟一个空格加 asc 或 desc（缺省 asc）；逗号后可有一个空格；最多 200 个字符。",
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?(?:, ?[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?)*$"
+    }
+  },
+  "additionalProperties": false
+}

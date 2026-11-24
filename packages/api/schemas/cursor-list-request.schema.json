@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cursor-list-request.schema.json",
+  "title": "CursorListRequest",
+  "description": "游标式列表的请求参数。线上以 cursor. 前缀的查询参数传递（如 cursor.limit=20），本定义约束解码后的对象；前缀下未声明的参数不合法。",
+  "x-paramPrefix": "cursor",
+  "x-pathConstants": "CURSOR_LIST_REQUEST_PARAMS",
+  "type": "object",
+  "properties": {
+    "after": {
+      "description": "上一批返回的 next，1–1024 个字符；首批不带。",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "limit": {
+      "description": "本批最多取多少条；缺省值由各接口自定。",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    }
+  },
+  "additionalProperties": false
+}
