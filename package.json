@@ -12,6 +12,7 @@
     "prepare": "husky install",
     "postinstall": "prettier --write ./pnpm-lock.yaml",
     "log": "conventional-changelog -p angular -i CHANGELOG.md -s --release-count 0",
+    "version": "node scripts/sync-python-version.mjs && git add python/pyproject.toml python/uv.lock",
     "gen": "node scripts/generate.mjs",
     "check:examples": "node scripts/check-examples.mjs",
     "check:bundle": "pnpm -F @done-coding/schema-api build && node scripts/check-bundle.mjs",
