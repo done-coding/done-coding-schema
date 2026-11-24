@@ -22,8 +22,8 @@ after: ""
 | 序 | 任务 | 状态 | 证据 |
 |---|---|---|---|
 | ⓐ | 按条目 `08byqy` 的规格写首版结构的定义，每个结构配合法、不合法两组样例；样例校验结果与预期一致 | 完成 | `pnpm check:examples` 退出码 0：72 合法 / 220 不合法，179 条约束全覆盖 |
-| ⓑ | 用成员包模板 `npm-common-member` 建 npm 包（答案见「已定事项」）；由定义生成 TS 类型与常量并入仓，包同时导出定义文件；能在浏览器端引入 | 未开始 | |
-| ⓒ | 一致性检查：手改生成物或改了定义未重新生成时失败；接进仓的检查命令 | 未开始 | |
+| ⓑ | 用成员包模板 `npm-common-member` 建 npm 包（答案见「已定事项」）；由定义生成 TS 类型与常量并入仓，包同时导出定义文件；能在浏览器端引入 | 完成 | `pnpm gen`；`pnpm -F @done-coding/schema-api typecheck` 与 vitest 通过；`pnpm check:bundle` 退出码 0 |
+| ⓒ | 一致性检查：手改生成物或改了定义未重新生成时失败；接进仓的检查命令 | 完成 | `pnpm check` 退出码 0；三种失配实测均失败、重新生成后恢复 |
 | ⓓ | 刷新领域状态与快照，归档本批 | 未开始 | |
 | ⓔ | 本批交付归档后立刻、必须、立即开始下一批 `k0l36c` | 未开始 | |
 
@@ -86,4 +86,7 @@ after: ""
 ## 进度记录
 
 - 2026-11-25 ⓑ（先行部分）：用 `npm-common-member` 模板在 `packages/api` 建出 `@done-coding/schema-api` 骨架（模板 commit 8edf826）；根引入 ajv 8.20.0、json-schema-to-typescript 16.0.0（均为 MIT）；`pnpm-workspace.yaml` 加 `minimumReleaseAge`，只装发布满 14 天的版本。提交 cbf64a6。
-- 2026-11-25 ⓐ 完成：`schemas/` 下 10 份定义（成功外壳、错误体、通用失败码表、三种列表、两种列表请求参数、筛选参数、专有码清单），样例在 `schemas/examples/`。`pnpm check:examples`：合法样例 72 个全过，不合法样例 220 个全被拒且原因与预期逐条一致；定义里 179 条约束全部至少有一个不合法样例触发（脚本自动统计，有一条没覆盖就失败）。故意改坏一条预期原因、改宽一条定义各试一次，检查都失败（退出码 1）。
+- 2026-11-25 ⓐ 完成：`schemas/` 下 10 份定义（成功外壳、错误体、通用失败码表、三种列表、两种列表请求参数、筛选参数、专有码清单），样例在 `schemas/examples/`。`pnpm check:examples`：合法样例 72 个全过，不合法样例 220 个全被拒且原因与预期逐条一致；定义里 179 条约束全部至少有一个不合法样例触发（脚本自动统计，有一条没覆盖就失败）。故意改坏一条预期原因、改宽一条定义各试一次，检查都失败（退出码 1）。提交 2130029。
+- 2026-11-25 ⓑ 完成：`pnpm gen`（`scripts/generate.mjs`）由定义生成 `packages/api/src/generated/` 下的类型（json-schema-to-typescript）、常量（业务码、通用失败码表、请求参数名与响应字段路径，均 `as const`）与定义模块，并把定义文件逐字节照抄到 `packages/api/schemas/`（包导出 `./schemas/*`）。成功外壳与三种列表的泛型版本手写在 `src/generics.ts`（只换 `data` / `items` 的类型，其余字段经 `Omit` 取自生成类型）。证据：`pnpm typecheck` 退出码 0（包装层与生成类型逐一相等；写错字段名、把页码式当游标式或一次性列表读、成功码写错、响应路径里取当前页码，共 9 处都确实报错）；vitest 4 项通过；`pnpm check:bundle` 构建后扫描 es / lib，无 Node 内置模块与未声明依赖；另用 esbuild 以 `--platform=browser` 打包入口并运行成功；用构建出的 `types/index.d.ts` 写使用方代码做类型检查（`skipLibCheck: false`）通过。提交 9a7a90f。
+- ⓑ 的取舍：json-schema-to-typescript 生成时去掉只用于校验的关键字（if / then / else / not / allOf / propertyNames 与 x- 标注），它们不改变字段形状；未声明 `additionalProperties` 的对象不生成索引签名，免得写错字段名也不报错。字段路径常量没有现成的生成工具，由生成脚本读定义直接产出（本仓独有的粘合逻辑）。npm 包 `exports` 里 `types` 条件移到最前，否则按条件顺序匹配的解析方式找不到类型声明。
+- 2026-11-25 ⓒ 完成：`pnpm check:generated`（`generate.mjs --check`）在内存里重新生成并与仓里的生成物逐字节比对，多出的旧文件也算不一致。仓根 `pnpm check` 依次跑样例校验、一致性检查、类型检查（含包装层与生成类型的相等断言）、vitest、构建与产物检查；提交时 lint-staged 对 `schemas/` 与生成目录的改动也跑样例校验与一致性检查。实测：ⓐ 手改 `types.ts` 一个字段名 → 退出码 1，`pnpm gen` 后 0；ⓑ 只改定义的一句描述不重新生成 → 退出码 1，列出 3 个不一致的生成物；ⓒ 生成类型里页码式的 `items` 改名而包装没跟上 → `pnpm typecheck` 报 `generics.type-test.ts(27,10)`、退出码 2。三处改动都已还原；`pnpm check` 全程退出码 0。
