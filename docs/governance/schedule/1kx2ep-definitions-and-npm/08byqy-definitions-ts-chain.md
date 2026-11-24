@@ -146,6 +146,56 @@ parent: ""
 
 不得重新定义通用码；`OK` 与 `HTTP_<数字>` 形式的码保留，不得使用；不接受未声明的字段。
 
+### 规格补充（用户 2026-11-25）
+
+通用：所有带格式的字符串都不接受末尾换行。除特别说明外，对象不接受未声明的字段。
+
+成功外壳
+- message：字符串，最长 1000，可以为空串。
+- data：对象或 null。
+
+错误体
+- code：1–128 字符，字母开头，只含字母、数字、下划线；不能是 OK。
+- message：不能是纯空白，最长 1000。
+- requestId：1–128 字符，不含空白字符。
+- detail：字符串，可选，不限长。
+- error.fields：可选，可以是空数组，不设最少项数。每一项：
+  - in：body / query / path / header / cookie
+  - code：1–128 字符，字母开头，只含字母、数字、下划线、点、短横线
+  - message：不能是纯空白
+  - pointer：RFC 6901 的 JSON Pointer
+  - parameter：1–256 字符
+  - in 为 body 时必须有 pointer 且不能有 parameter；in 为其他值时必须有 parameter 且不能有 pointer
+  - 必有 in、code、message；不接受其他字段
+
+页码式请求参数（解码后的对象，不接受其他字段）
+- page：整数 ≥ 1
+- pageSize：整数 1–100
+- query：最长 200
+- orderBy：最长 200；逗号分隔，每段是「小驼峰字段名」后面可跟一个空格加 asc 或 desc；逗号后可有一个空格
+
+页码式响应
+- 顶层必有 items（数组）与 page；顶层允许接口自己声明的附带字段。
+- page 对象只有 totalRecord（整数 ≥ 0）、pageSize（整数 1–100）、totalPage（整数 ≥ 0），三项必有，不接受其他字段。
+
+一次性列表
+- 顶层必有 items（数组）；顶层允许接口自己声明的附带字段。
+
+游标式（新结构，按页码式的写法类推）
+- 响应顶层必有 items 与 cursor；顶层允许附带字段。cursor 对象只有 next（字符串，1–1024 字符）与 hasMore（布尔，必有），不接受其他字段。
+- 请求参数对象只有 after（字符串，1–1024 字符）与 limit（整数 1–100），不接受其他字段。
+
+专有业务码清单
+- service：小写字母开头，只含小写字母、数字、短横线，最长 64。
+- codes：至少 1 项。每一项必有 code、stage、retryable、outcome、meaning，不接受其他字段：
+  - code：最长 128；整体大写下划线或整体小写下划线，字母开头，不以下划线结尾，不含  字节精确比较，不做大小写归一。
+  - stage：accept / execute / both
+  - httpStatus：整数 400–599。stage 为 execute 时不得有；为 accept 或 both 时必须有。
+  - additionalHttpStatuses：可选；至少 1 项，不重复，每项整数 400–599；不含主状态；
+  - retryable：布尔
+  - outcome：not_executed / unknown
+  - meaning：1–1000 字符
+
 ## 怎么算完成
 
 - 样例校验命令通过：合法样例全过，不合法样例全被拒，且拒绝原因是预期的那一条。上面每条约束至少有一个不合法样例对应。
