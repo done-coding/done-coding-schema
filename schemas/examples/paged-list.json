@@ -1,0 +1,513 @@
+{
+  "valid": [
+    {
+      "name": "总数为 0",
+      "data": {
+        "items": [],
+        "page": {
+          "totalRecord": 0,
+          "pageSize": 10,
+          "totalPage": 0
+        }
+      }
+    },
+    {
+      "name": "末页不满",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      }
+    },
+    {
+      "name": "恰好整除",
+      "data": {
+        "items": [],
+        "page": {
+          "totalRecord": 100,
+          "pageSize": 100,
+          "totalPage": 1
+        }
+      }
+    },
+    {
+      "name": "每页 1 条",
+      "data": {
+        "items": [],
+        "page": {
+          "totalRecord": 7,
+          "pageSize": 1,
+          "totalPage": 7
+        }
+      }
+    },
+    {
+      "name": "带接口自己声明的附带字段",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3
+        },
+        "summary": {
+          "amount": 100
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": [],
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "缺 items",
+      "data": {
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "items"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 page",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "page"
+          }
+        }
+      ]
+    },
+    {
+      "name": "items 不是数组",
+      "data": {
+        "items": null,
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "同时带 cursor",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3
+        },
+        "cursor": {
+          "hasMore": true,
+          "next": "x"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "page 不是对象",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": 1
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "page 回传当前页码",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 3,
+          "page": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "page"
+          }
+        }
+      ]
+    },
+    {
+      "name": "page 缺 totalRecord",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "totalRecord"
+          }
+        }
+      ]
+    },
+    {
+      "name": "page 缺 pageSize",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "pageSize"
+          }
+        }
+      ]
+    },
+    {
+      "name": "page 缺 totalPage",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "totalPage"
+          }
+        }
+      ]
+    },
+    {
+      "name": "totalRecord 为负",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": -1,
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalRecord",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "totalRecord 不是整数",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 20.5,
+          "pageSize": 10,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalRecord",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 为 0",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 0,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/pageSize",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 超过 100",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 101,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/pageSize",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 是字符串",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": "10",
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/pageSize",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "totalPage 为负",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": -1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalPage",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "totalPage 不是整数",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 2.1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalPage",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "totalPage 不等于 ceil(totalRecord / pageSize)",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 10,
+          "totalPage": 2
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalPage",
+          "keyword": "x-totalPageEqualsCeil"
+        }
+      ]
+    },
+    {
+      "name": "总数为 0 时 totalPage 不为 0",
+      "data": {
+        "items": [],
+        "page": {
+          "totalRecord": 0,
+          "pageSize": 10,
+          "totalPage": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page/totalPage",
+          "keyword": "const"
+        },
+        {
+          "instancePath": "/page/totalPage",
+          "keyword": "x-totalPageEqualsCeil"
+        }
+      ]
+    }
+  ]
+}

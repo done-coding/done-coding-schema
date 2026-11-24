@@ -1,0 +1,488 @@
+{
+  "valid": [
+    {
+      "name": "INVALID_REQUEST 语义与码表一致",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "UNAUTHENTICATED 语义与码表一致",
+      "data": {
+        "code": "UNAUTHENTICATED",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "FORBIDDEN 语义与码表一致",
+      "data": {
+        "code": "FORBIDDEN",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "NOT_FOUND 语义与码表一致",
+      "data": {
+        "code": "NOT_FOUND",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "ROUTE_NOT_FOUND 语义与码表一致",
+      "data": {
+        "code": "ROUTE_NOT_FOUND",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "METHOD_NOT_ALLOWED 语义与码表一致",
+      "data": {
+        "code": "METHOD_NOT_ALLOWED",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "CONFLICT 语义与码表一致",
+      "data": {
+        "code": "CONFLICT",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "RATE_LIMITED 语义与码表一致",
+      "data": {
+        "code": "RATE_LIMITED",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      }
+    },
+    {
+      "name": "INTERNAL_ERROR 语义与码表一致",
+      "data": {
+        "code": "INTERNAL_ERROR",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      }
+    },
+    {
+      "name": "LIST_LIMIT_EXCEEDED 语义与码表一致",
+      "data": {
+        "code": "LIST_LIMIT_EXCEEDED",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      }
+    },
+    {
+      "name": "SERVICE_UNAVAILABLE 语义与码表一致",
+      "data": {
+        "code": "SERVICE_UNAVAILABLE",
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        }
+      }
+    },
+    {
+      "name": "专有码不受码表约束",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        }
+      }
+    },
+    {
+      "name": "大小写不同的码不算通用码",
+      "data": {
+        "code": "rate_limited",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "INVALID_REQUEST 的 retryable 与码表不符",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "INVALID_REQUEST 的 outcome 与码表不符",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "UNAUTHENTICATED 的 retryable 与码表不符",
+      "data": {
+        "code": "UNAUTHENTICATED",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "UNAUTHENTICATED 的 outcome 与码表不符",
+      "data": {
+        "code": "UNAUTHENTICATED",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "FORBIDDEN 的 retryable 与码表不符",
+      "data": {
+        "code": "FORBIDDEN",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "FORBIDDEN 的 outcome 与码表不符",
+      "data": {
+        "code": "FORBIDDEN",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "NOT_FOUND 的 retryable 与码表不符",
+      "data": {
+        "code": "NOT_FOUND",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "NOT_FOUND 的 outcome 与码表不符",
+      "data": {
+        "code": "NOT_FOUND",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "ROUTE_NOT_FOUND 的 retryable 与码表不符",
+      "data": {
+        "code": "ROUTE_NOT_FOUND",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "ROUTE_NOT_FOUND 的 outcome 与码表不符",
+      "data": {
+        "code": "ROUTE_NOT_FOUND",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "METHOD_NOT_ALLOWED 的 retryable 与码表不符",
+      "data": {
+        "code": "METHOD_NOT_ALLOWED",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "METHOD_NOT_ALLOWED 的 outcome 与码表不符",
+      "data": {
+        "code": "METHOD_NOT_ALLOWED",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "CONFLICT 的 retryable 与码表不符",
+      "data": {
+        "code": "CONFLICT",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "CONFLICT 的 outcome 与码表不符",
+      "data": {
+        "code": "CONFLICT",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "RATE_LIMITED 的 retryable 与码表不符",
+      "data": {
+        "code": "RATE_LIMITED",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "RATE_LIMITED 的 outcome 与码表不符",
+      "data": {
+        "code": "RATE_LIMITED",
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "INTERNAL_ERROR 的 retryable 与码表不符",
+      "data": {
+        "code": "INTERNAL_ERROR",
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "INTERNAL_ERROR 的 outcome 与码表不符",
+      "data": {
+        "code": "INTERNAL_ERROR",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "LIST_LIMIT_EXCEEDED 的 retryable 与码表不符",
+      "data": {
+        "code": "LIST_LIMIT_EXCEEDED",
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "LIST_LIMIT_EXCEEDED 的 outcome 与码表不符",
+      "data": {
+        "code": "LIST_LIMIT_EXCEEDED",
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "SERVICE_UNAVAILABLE 的 retryable 与码表不符",
+      "data": {
+        "code": "SERVICE_UNAVAILABLE",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "name": "SERVICE_UNAVAILABLE 的 outcome 与码表不符",
+      "data": {
+        "code": "SERVICE_UNAVAILABLE",
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "const"
+        }
+      ]
+    }
+  ]
+}

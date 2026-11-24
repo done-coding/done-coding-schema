@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "error-body.schema.json",
+  "title": "ErrorBody",
+  "description": "错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 必须与通用失败码表一致。",
+  "type": "object",
+  "properties": {
+    "code": {
+      "description": "业务码，开放字符串：字母开头，只含字母、数字、下划线，1–128 个字符；不能是 OK。使用方遇到不认识的码按 HTTP 状态归类处理。",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,127}$",
+      "not": { "const": "OK" }
+    },
+    "message": {
+      "description": "说明，不能是纯空白。",
+      "type": "string",
+      "maxLength": 1000,
+      "pattern": "\\S"
+    },
+    "data": {
+      "description": "错误体恒为 null。",
+      "type": "null"
+    },
+    "error": { "$ref": "#/$defs/errorDetail" },
+    "requestId": {
+      "description": "请求标识，1–128 个字符，不含空白字符。",
+      "type": "string",
+      "pattern": "^\\S{1,128}$"
+    },
+    "detail": {
+      "description": "补充说明，可选，不限长。",
+      "type": "string"
+    }
+  },
+  "required": ["code", "message", "data", "error", "requestId"],
+  "additionalProperties": false,
+  "allOf": [{ "$ref": "common-error-codes.schema.json" }],
+  "$defs": {
+    "errorDetail": {
+      "title": "ErrorDetail",
+      "description": "错误的处置信息。",
+      "type": "object",
+      "properties": {
+        "retryable": {
+          "description": "原样重试是否可能成功。",
+          "type": "boolean"
+        },
+        "outcome": {
+          "description": "not_executed：确定没有执行；unknown：可能已产生副作用。",
+          "enum": ["not_executed", "unknown"]
+        },
+        "fields": {
+          "description": "逐项指出出错的输入；可以是空数组。",
+          "type": "array",
+          "items": { "$ref": "#/$defs/errorField" }
+        }
+      },
+      "required": ["retryable", "outcome"],
+      "additionalProperties": false
+    },
+    "errorField": {
+      "title": "ErrorField",
+      "description": "一项出错的输入。in 为 body 时用 pointer 定位、不能有 parameter；其他位置用 parameter 定位、不能有 pointer。",
+      "type": "object",
+      "properties": {
+        "in": {
+          "description": "出错输入所在的位置。",
+          "enum": ["body", "query", "path", "header", "cookie"]
+        },
+        "code": {
+          "description": "字段级错误码：字母开头，只含字母、数字、下划线、点、短横线，1–128 个字符。",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.\\-]{0,127}$"
+        },
+        "message": {
+          "description": "说明，不能是纯空白。",
+          "type": "string",
+          "maxLength": 1000,
+          "pattern": "\\S"
+        },
+        "pointer": {
+          "description": "请求体内的位置，RFC 6901 JSON Pointer。",
+          "type": "string",
+          "pattern": "^(?:(?:/(?:[^~/]|~[01])*)*/(?:(?:[^~/]|~[01])*(?:[^~/\\n]|~[01]))?)?$"
+        },
+        "parameter": {
+          "description": "参数名，1–256 个字符。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": ["in", "code", "message"],
+      "additionalProperties": false,
+      "if": {
+        "properties": { "in": { "const": "body" } },
+        "required": ["in"]
+      },
+      "then": {
+        "required": ["pointer"],
+        "properties": { "parameter": false }
+      },
+      "else": {
+        "required": ["parameter"],
+        "properties": { "pointer": false }
+      }
+    }
+  }
+}

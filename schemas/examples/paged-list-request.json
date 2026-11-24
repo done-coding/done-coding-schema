@@ -1,0 +1,316 @@
+{
+  "valid": [
+    {
+      "name": "都不带（用缺省值）",
+      "data": {}
+    },
+    {
+      "name": "页码与每页条数",
+      "data": {
+        "page": 1,
+        "pageSize": 10
+      }
+    },
+    {
+      "name": "全部参数",
+      "data": {
+        "page": 3,
+        "pageSize": 100,
+        "query": "",
+        "orderBy": "createdAt desc, name"
+      }
+    },
+    {
+      "name": "orderBy 单字段",
+      "data": {
+        "orderBy": "name"
+      }
+    },
+    {
+      "name": "orderBy 逗号后不带空格",
+      "data": {
+        "orderBy": "name asc,createdAt desc,id"
+      }
+    },
+    {
+      "name": "query 恰 200 字符",
+      "data": {
+        "query": "搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜"
+      }
+    },
+    {
+      "name": "orderBy 恰 200 字符",
+      "data": {
+        "orderBy": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": "page=1",
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "前缀下出现未声明的参数",
+      "data": {
+        "page": 1,
+        "limit": 10
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "limit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "page 为 0",
+      "data": {
+        "page": 0
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "page 不是整数",
+      "data": {
+        "page": 1.5
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "page 未解码成整数",
+      "data": {
+        "page": "1"
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 为 0",
+      "data": {
+        "pageSize": 0
+      },
+      "errors": [
+        {
+          "instancePath": "/pageSize",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 超过 100",
+      "data": {
+        "pageSize": 101
+      },
+      "errors": [
+        {
+          "instancePath": "/pageSize",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 不是整数",
+      "data": {
+        "pageSize": "10"
+      },
+      "errors": [
+        {
+          "instancePath": "/pageSize",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "query 不是字符串",
+      "data": {
+        "query": 1
+      },
+      "errors": [
+        {
+          "instancePath": "/query",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "query 超过 200 字符",
+      "data": {
+        "query": "搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜搜"
+      },
+      "errors": [
+        {
+          "instancePath": "/query",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 不是字符串",
+      "data": {
+        "orderBy": ["name"]
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 超过 200 字符",
+      "data": {
+        "orderBy": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 为空串",
+      "data": {
+        "orderBy": ""
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 字段名不是小驼峰",
+      "data": {
+        "orderBy": "CreatedAt"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 字段名含下划线",
+      "data": {
+        "orderBy": "created_at"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 方向大写",
+      "data": {
+        "orderBy": "name DESC"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 方向前两个空格",
+      "data": {
+        "orderBy": "name  desc"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 两个方向",
+      "data": {
+        "orderBy": "name asc desc"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 以逗号结尾",
+      "data": {
+        "orderBy": "name,"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 逗号前有空格",
+      "data": {
+        "orderBy": "name ,age"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 逗号后两个空格",
+      "data": {
+        "orderBy": "name,  age"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "orderBy 末尾换行",
+      "data": {
+        "orderBy": "name\n"
+      },
+      "errors": [
+        {
+          "instancePath": "/orderBy",
+          "keyword": "pattern"
+        }
+      ]
+    }
+  ]
+}
