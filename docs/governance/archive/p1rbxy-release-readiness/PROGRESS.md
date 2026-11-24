@@ -24,8 +24,8 @@ after: k0l36c
 | ⓐ | 发布流程：模板自带的流程只管 npm，补上 Python 包的构建与上传步骤；两个包同一提交、同一版本号 | 完成 | 两个工作流改为「定版本 → 构建与检查 → 核对版本形态 → npm → PyPI」；临时克隆里演练 `lerna version` 4 种情形，两包版本均落在同一提交 |
 | ⓑ | 本机演练一次构建（只构建，不上传），核对两个包的内容与版本 | 完成 | 见下「本机构建演练」 |
 | ⓒ | README：这套结构是什么、TS 与 Python 各怎么引入和使用、版本与兼容规则 | 完成 | 空目录照做：TS、Python 各一次走通（用本机构建产物） |
-| ⓓ | 刷新领域状态与快照，归档本批 | 未开始 | |
-| ⓔ | 收工。发布由维护者决定，不在本串内执行 | 未开始 | |
+| ⓓ | 刷新领域状态与快照，归档本批 | 完成 | 见下「交付」；`done-coding harness check` 通过 |
+| ⓔ | 收工。发布由维护者决定，不在本串内执行 | 完成 | 未发布、未 push |
 
 ## 本机构建演练（2026-11-25，只构建，不上传）
 
@@ -52,3 +52,9 @@ after: k0l36c
   - 例子核对：README 里 6 段 JSON 例子逐段过定义校验，全部合法。
   - 空目录照做（用本机构建产物）：TS——新建 npm 项目，装本机 `.tgz` 与 ajv 8.20.0、typescript 5.9.3，README 的两段 TS 原样做类型检查通过（`moduleResolution: Bundler`，`skipLibCheck: false`），校验那段打包后运行：错误体 code 为 `OK` 得 false、合法错误体得 true；npm 包 README 的片段也通过类型检查。Python——新建虚拟环境装本机 wheel（pydantic 2.14.3），README 的片段原样运行，输出 `甲`、`429`、`page.pageSize` 与注释一致；Python 包 README 片段运行通过；另装 FastAPI 0.162.3 验证 `response_model=SuccessEnvelope[PagedList[User]]` 能正确输出并生成 OpenAPI 结构。
   - 证据：`pnpm check` 退出码 0；eslint、prettier 通过。
+- 2026-11-25 ⓓ：领域状态不变（四个领域都已 active）。`SNAPSHOT.md` 替换的事实：头部指针补上 README 与发布流程文档；`toolchain` 一行补上版本同步脚本与两个发布工作流（注明未实际运行过）；「版本」契约由「同一版本号」改为「同一版本号、同一版本提交与标签」并写明预发布的对应写法、两包均未发布；技术基线补一条发布方式。没有移出的史料。共享骨架：本批改了 `.github/workflows/`（本批独占）与 `package.json`（串首独占，新增 `version` 生命周期脚本）。
+- 留给维护者的事项（均不在本串内执行）：在 GitHub 配 `NPM_TOKEN`、`RELEASE_GITHUB_TOKEN`，在 PyPI 登记可信发布者（见 `docs/release.md`）；两个工作流未在 GitHub 上实际跑过；仓库没有 LICENSE 文件，两个包声明 MIT 但发布物里不含许可证全文，发布前宜补。
+
+## 交付
+
+条目 `gwwvzi`：8c3ffd1（发布流程、版本同步与对应规则、README 与发布说明）· 归档提交（快照、归档）。结果：两个包能以同一版本从同一提交构建，发布流程写全且上传前有版本一致与版本形态检查；README 接入步骤在空目录照做 TS、Python 各一次走通；未发布、未 push。
