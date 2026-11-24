@@ -242,6 +242,22 @@
       ]
     },
     {
+      "name": "没有更多时 next 显式为 null",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false,
+          "next": null
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/next",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
       "name": "next 为空串",
       "data": {
         "items": [

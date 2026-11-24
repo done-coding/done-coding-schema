@@ -16,7 +16,10 @@
     "check:examples": "node scripts/check-examples.mjs",
     "check:bundle": "pnpm -F @done-coding/schema-api build && node scripts/check-bundle.mjs",
     "check:generated": "node scripts/generate.mjs --check",
-    "check": "pnpm check:examples && pnpm check:generated && pnpm -F @done-coding/schema-api typecheck && pnpm -F @done-coding/schema-api exec vitest run && pnpm check:bundle"
+    "check": "pnpm check:examples && pnpm check:generated && pnpm check:versions && pnpm -F @done-coding/schema-api typecheck && pnpm -F @done-coding/schema-api exec vitest run && pnpm check:python && pnpm check:bundle && pnpm check:wheel",
+    "check:python": "uv run --project python --frozen pytest -q",
+    "check:versions": "node scripts/check-versions.mjs",
+    "check:wheel": "uv build --project python -q"
   },
   "author": "JustSoSu",
   "license": "MIT",
@@ -58,8 +61,15 @@
     "schemas/**/*.json": [
       "node scripts/check-examples.mjs"
     ],
-    "{schemas,packages/*/schemas,packages/*/src/generated}/**": [
+    "{schemas,packages/*/schemas,packages/*/src/generated,python/src/*/_generated}/**": [
       "node scripts/generate.mjs --check"
+    ],
+    "python/**/*.py": [
+      "uvx --from 'ruff==0.16.9' ruff check --fix --force-exclude",
+      "uvx --from 'ruff==0.16.9' ruff format --force-exclude"
+    ],
+    "{packages/api/package.json,python/pyproject.toml}": [
+      "node scripts/check-versions.mjs"
     ]
   },
   "engines": {

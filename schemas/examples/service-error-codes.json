@@ -994,6 +994,28 @@
       ]
     },
     {
+      "name": "httpStatus 显式为 null",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": null,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
       "name": "accept 缺 httpStatus",
       "data": {
         "service": "order-service",

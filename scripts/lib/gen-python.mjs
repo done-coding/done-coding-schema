@@ -1,0 +1,159 @@
+// 由定义生成 Python 包里的 Pydantic 模型（datamodel-code-generator）与常量。
+// 生成工具在 python/ 的开发依赖里，经 uv 调用；输出统一用 ruff format 格式化。
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { buildConstants } from "./gen-constants.mjs";
+import { ROOT, baseName } from "./schemas.mjs";
+import { hasModelOutput, shapeOf } from "./shape.mjs";
+
+export const PYTHON_PROJECT = path.join(ROOT, "python");
+const PACKAGE = "done_coding_schema_api";
+export const PYTHON_GENERATED_DIR = path.join(
+  PYTHON_PROJECT,
+  "src",
+  PACKAGE,
+  "_generated",
+);
+
+const BANNER = [
+  "# 本文件由 scripts/generate.mjs 依据 schemas/ 的定义生成，勿手改。",
+  "# 改了定义后在仓根运行 pnpm gen；pnpm check:generated 会核对本文件与定义一致。",
+  "",
+].join("\n");
+
+const DATAMODEL_OPTIONS = [
+  "--input-file-type=jsonschema",
+  "--output-model-type=pydantic_v2.BaseModel",
+  "--target-python-version=3.10",
+  "--use-title-as-name",
+  "--use-annotated",
+  "--field-constraints",
+  "--use-double-quotes",
+  "--disable-timestamp",
+  "--use-schema-description",
+  "--use-field-description",
+  // 标量一律严格类型（不做 "10" → 10 这类转换），RootModel 不继承基类也一样严格。
+  "--strict-types",
+  "str",
+  "int",
+  "float",
+  "bool",
+  // 枚举生成 Literal：严格模式下 Literal 接受字符串，Enum 只接受枚举实例。
+  "--enum-field-as-literal=all",
+  // 手写基类：严格类型、列表顶层保留附带字段、输出用线上字段名，见 _base.py。
+  `--base-class=${PACKAGE}._base.SchemaModel`,
+  "--formatters=ruff-format",
+];
+
+/** 在 python/ 的锁定环境里运行命令。 */
+function uvRun(args, input) {
+  const result = spawnSync(
+    "uv",
+    ["run", "--project", PYTHON_PROJECT, "--frozen", "--quiet", ...args],
+    { input, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (result.error) {
+    throw new Error(`无法运行 uv：${result.error.message}`);
+  }
+  if (result.status !== 0) {
+    throw new Error(`命令失败：uv run ${args.join(" ")}\n${result.stderr}`);
+  }
+  return result.stdout;
+}
+
+/** 用 python/ 的 ruff 配置格式化，与提交时的格式化结果一致。 */
+export const formatPython = (source, filePath) =>
+  uvRun(["ruff", "format", `--stdin-filename=${filePath}`, "-"], source);
+
+/**
+ * @returns {Map<string, string>} 模块文件名 → 未加 banner 的源码
+ */
+export function generatePythonModels(entries) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "schema-codegen-"));
+  try {
+    const input = path.join(tmp, "in");
+    const output = path.join(tmp, "out");
+    fs.mkdirSync(input);
+    for (const { file, schema } of entries.filter(({ schema }) =>
+      hasModelOutput(schema),
+    )) {
+      fs.writeFileSync(
+        path.join(input, `${baseName(file)}.json`),
+        JSON.stringify(shapeOf(schema, { dropFalseProperties: true }), null, 2),
+      );
+    }
+    uvRun([
+      "datamodel-codegen",
+      `--input=${input}`,
+      `--output=${output}`,
+      ...DATAMODEL_OPTIONS,
+    ]);
+    return new Map(
+      fs
+        .readdirSync(output)
+        .filter((name) => name.endsWith(".py"))
+        .sort()
+        .map((name) => [
+          name,
+          fs.readFileSync(path.join(output, name), "utf8"),
+        ]),
+    );
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+/** JSON 值 → Python 字面量；对象用只读映射。 */
+function pyLiteral(value) {
+  if (value === null) return "None";
+  if (value === true) return "True";
+  if (value === false) return "False";
+  if (typeof value === "number" || typeof value === "string") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `(${value.map(pyLiteral).join(", ")},)`;
+  const items = Object.entries(value).map(
+    ([key, child]) => `${JSON.stringify(key)}: ${pyLiteral(child)}`,
+  );
+  return `MappingProxyType({${items.join(", ")}})`;
+}
+
+/** 常量：与 npm 包同一份数据；联合类型用 Literal。 */
+export function generatePythonConstants(entries) {
+  const lines = [
+    "from types import MappingProxyType",
+    "from typing import Final, Literal",
+    "",
+  ];
+  for (const { name, doc, value, unionType } of buildConstants(entries)) {
+    lines.push(
+      "",
+      `${name}: Final = ${pyLiteral(value)}`,
+      `"""${doc.join("\n")}"""`,
+    );
+    if (unionType) {
+      lines.push(
+        `${unionType} = Literal[${Object.values(value)
+          .map((item) => JSON.stringify(item))
+          .join(", ")}]`,
+      );
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/**
+ * @returns {Map<string, string>} 绝对路径 → 已格式化的内容
+ */
+export function buildPythonOutputs(entries) {
+  const sources = generatePythonModels(entries);
+  sources.set("constants.py", generatePythonConstants(entries));
+  const outputs = new Map();
+  for (const [name, source] of sources) {
+    const filePath = path.join(PYTHON_GENERATED_DIR, name);
+    outputs.set(filePath, formatPython(BANNER + source, filePath));
+  }
+  return outputs;
+}

@@ -65,6 +65,19 @@
       ]
     },
     {
+      "name": "首批 after 显式为 null",
+      "data": {
+        "after": null,
+        "limit": 20
+      },
+      "errors": [
+        {
+          "instancePath": "/after",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
       "name": "after 为空串",
       "data": {
         "after": ""

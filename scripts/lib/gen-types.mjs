@@ -1,46 +1,6 @@
-// 由定义生成 TS 类型（json-schema-to-typescript）。
-//
-// 类型只表达结构的形状。只用于校验的关键字（if / then / else / not / allOf /
-// propertyNames）与 x- 标注在交给生成工具前去掉：它们不改变字段与字段类型，
-// 留着反而会让生成工具产出无意义的交叉类型。
+// 由定义生成 TS 类型（json-schema-to-typescript）。类型只表达结构的形状，见 shape.mjs。
 import { compile } from "json-schema-to-typescript";
-
-const VALIDATION_ONLY_KEYWORDS = new Set([
-  "if",
-  "then",
-  "else",
-  "not",
-  "allOf",
-  "propertyNames",
-  "$comment",
-]);
-
-/** 深拷贝并去掉只用于校验的关键字。 */
-function shapeOf(node) {
-  if (Array.isArray(node)) return node.map(shapeOf);
-  if (node === null || typeof node !== "object") return node;
-  return Object.fromEntries(
-    Object.entries(node)
-      .filter(
-        ([key]) => !VALIDATION_ONLY_KEYWORDS.has(key) && !key.startsWith("x-"),
-      )
-      .map(([key, value]) => [
-        key,
-        // properties / patternProperties / $defs 下的键是字段名，不是关键字。
-        ["properties", "patternProperties", "$defs"].includes(key)
-          ? Object.fromEntries(
-              Object.entries(value).map(([name, child]) => [
-                name,
-                shapeOf(child),
-              ]),
-            )
-          : shapeOf(value),
-      ]),
-  );
-}
-
-/** 只给描述对象结构的定义生成类型（通用失败码表只作约束与常量来源）。 */
-export const hasTypeOutput = (schema) => schema.type === "object";
+import { hasModelOutput, shapeOf } from "./shape.mjs";
 
 /**
  * @param {{file: string, schema: Record<string, any>}[]} entries
@@ -49,7 +9,7 @@ export const hasTypeOutput = (schema) => schema.type === "object";
 export async function generateTypes(entries) {
   const parts = [];
   for (const { file, schema } of entries.filter(({ schema }) =>
-    hasTypeOutput(schema),
+    hasModelOutput(schema),
   )) {
     const shape = shapeOf(schema);
     // 形状里的引用都应是文件内引用；跨文件引用目前只出现在校验关键字里。

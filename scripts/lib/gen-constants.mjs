@@ -88,52 +88,67 @@ function requestParams(schema) {
 }
 
 /**
+ * 常量的数据：各语言按同一份数据渲染。
  * @param {{file: string, schema: Record<string, any>}[]} entries
- * @returns {string} 未格式化的 TS 源码
+ * @returns {{name: string, doc: string[], value: unknown, unionType?: string}[]}
  */
-export function generateConstants(entries) {
+export function buildConstants(entries) {
   const byFile = new Map(entries.map(({ file, schema }) => [file, schema]));
-  const blocks = [];
-
   const successCode = byFile.get(SUCCESS_SCHEMA).properties.code.const;
-  blocks.push(
-    docComment(["成功码。成功外壳的 code 只能是这一组里的值。"]),
-    `export const SUCCESS_CODES = ${literal({ [successCode]: successCode })} as const;`,
-    "export type SuccessCode = (typeof SUCCESS_CODES)[keyof typeof SUCCESS_CODES];",
-  );
-
   const rows = readCommonErrorCodes(byFile.get(COMMON_CODES_SCHEMA));
-  blocks.push(
-    docComment([
-      "通用失败码。错误体的 code 是开放字符串，这里只列通用的一组；",
-      "各服务可以有自己的专有码，遇到不认识的码按 HTTP 状态归类处理。",
-    ]),
-    `export const COMMON_ERROR_CODES = ${literal(
-      Object.fromEntries(rows.map(({ code }) => [code, code])),
-    )} as const;`,
-    "export type CommonErrorCode = (typeof COMMON_ERROR_CODES)[keyof typeof COMMON_ERROR_CODES];",
-    docComment([
-      "通用失败码 → HTTP 状态、能否重试、是否已执行（outcome）与含义。",
-    ]),
-    `export const COMMON_ERROR_CODE_TABLE = ${literal(
-      Object.fromEntries(rows.map(({ code, ...rest }) => [code, rest])),
-    )} as const;`,
-  );
+
+  const constants = [
+    {
+      name: "SUCCESS_CODES",
+      doc: ["成功码。成功外壳的 code 只能是这一组里的值。"],
+      value: { [successCode]: successCode },
+      unionType: "SuccessCode",
+    },
+    {
+      name: "COMMON_ERROR_CODES",
+      doc: [
+        "通用失败码。错误体的 code 是开放字符串，这里只列通用的一组；",
+        "各服务可以有自己的专有码，遇到不认识的码按 HTTP 状态归类处理。",
+      ],
+      value: Object.fromEntries(rows.map(({ code }) => [code, code])),
+      unionType: "CommonErrorCode",
+    },
+    {
+      name: "COMMON_ERROR_CODE_TABLE",
+      doc: ["通用失败码 → HTTP 状态、能否重试、是否已执行（outcome）与含义。"],
+      value: Object.fromEntries(rows.map(({ code, ...rest }) => [code, rest])),
+    },
+  ];
 
   for (const { schema } of entries) {
     const name = schema["x-pathConstants"];
     if (!name) continue;
     const isRequest = Boolean(schema["x-paramPrefix"]);
-    const value = isRequest ? requestParams(schema) : responsePaths(schema);
-    blocks.push(
-      docComment([
+    constants.push({
+      name,
+      doc: [
         isRequest
           ? `${schema.title} 的线上参数名（由定义 ${schema.$id} 生成）。`
           : `${schema.title} 响应里各字段的路径（由定义 ${schema.$id} 生成）。`,
-      ]),
-      `export const ${name} = ${literal(value)} as const;`,
-    );
+      ],
+      value: isRequest ? requestParams(schema) : responsePaths(schema),
+    });
   }
+  return constants;
+}
 
-  return blocks.join("\n");
+/**
+ * @param {{file: string, schema: Record<string, any>}[]} entries
+ * @returns {string} 未格式化的 TS 源码
+ */
+export function generateConstants(entries) {
+  return buildConstants(entries)
+    .flatMap(({ name, doc, value, unionType }) => [
+      docComment(doc),
+      `export const ${name} = ${literal(value)} as const;`,
+      ...(unionType
+        ? [`export type ${unionType} = (typeof ${name})[keyof typeof ${name}];`]
+        : []),
+    ])
+    .join("\n");
 }

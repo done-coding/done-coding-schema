@@ -772,6 +772,26 @@
       ]
     },
     {
+      "name": "可选的 detail 显式为 null",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01",
+        "detail": null
+      },
+      "errors": [
+        {
+          "instancePath": "/detail",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
       "name": "error 不是对象",
       "data": {
         "code": "ORDER_LOCKED",
@@ -1306,6 +1326,33 @@
               "code": "invalid",
               "message": "不合法",
               "pointer": 0
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pointer 显式为 null",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": null
             }
           ]
         },
