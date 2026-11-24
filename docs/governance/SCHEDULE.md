@@ -1,0 +1,12 @@
+# 在途批次（SCHEDULE）
+
+> 文档定位：快照型清单 · **[MUST] 由 `scripts/governance-lists.py` 重生成，[MUST NOT] 手工维护**
+> **并行准入闸**：两个批次的领域集合相交即不得并行（横向领域不计入）。
+
+共 **3** 个在途批次。
+
+| 批次 | 条目数 | 所涉领域 | 进度 |
+|---|---|---|---|
+| `1kx2ep-definitions-and-npm` | 1 | definition · npm-package · toolchain | [PROGRESS](schedule/1kx2ep-definitions-and-npm/PROGRESS.md) |
+| `k0l36c-pypi-package` | 1 | pypi-package · toolchain | [PROGRESS](schedule/k0l36c-pypi-package/PROGRESS.md) |
+| `p1rbxy-release-readiness` | 1 | npm-package · pypi-package · toolchain | [PROGRESS](schedule/p1rbxy-release-readiness/PROGRESS.md) |
