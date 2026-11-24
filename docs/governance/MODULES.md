@@ -9,7 +9,7 @@
 | `definition` | 垂直 | 通用接口结构的定义与样例：一个结构一份 JSON Schema，各带合法与不合法样例 | active | `schemas/` |
 | `toolchain` | 垂直 | 生成与检查：由定义生成各语言代码，核对生成物与定义一致、各包版本一致 | active | `scripts/` |
 | `npm-package` | 垂直 | npm 包：生成的 TS 类型连同定义文件一起导出 | active | `packages/` |
-| `pypi-package` | 垂直 | PyPI 包：生成的 Pydantic 模型 | not_implemented | `python/` |
+| `pypi-package` | 垂直 | PyPI 包：生成的 Pydantic 模型 | active | `python/` |
 
 无横向（调度）领域。
 

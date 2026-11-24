@@ -25,8 +25,8 @@ after: 1kx2ep
 | ⓑ | 由定义生成 Pydantic 模型与常量并入仓，纳入上一批的一致性检查 | 完成 | `pnpm gen` 产出 24 个文件；手改生成的模型后 `pnpm check:generated` 退出码 1 |
 | ⓒ | 用上一批的同一组样例验证：Python 模型的接受与拒绝结果与定义校验一致 | 完成 | `pnpm check:python`：603 项通过；生成模型的 46 条差异逐条登记 |
 | ⓓ | 版本一致检查：npm 包与 Python 包版本号不一致时失败 | 完成 | `pnpm check:versions`；改成 0.0.1 时退出码 1 |
-| ⓔ | 刷新领域状态与快照，归档本批 | 未开始 | |
-| ⓕ | 本批交付归档后立刻、必须、立即开始下一批 `p1rbxy` | 未开始 | |
+| ⓔ | 刷新领域状态与快照，归档本批 | 完成 | 见下「交付」；`done-coding harness check` 通过 |
+| ⓕ | 本批交付归档后立刻、必须、立即开始下一批 `p1rbxy` | 完成 | 归档后即转入 `p1rbxy` |
 
 ## 已定事项与取舍
 
@@ -65,3 +65,8 @@ after: 1kx2ep
   - `pnpm gen` 现在也生成 `python/src/done_coding_schema_api/_generated/`（9 个模型模块、`constants.py`、`__init__.py`）：模型由 datamodel-code-generator 生成（输入与 TS 侧同一份去掉校验关键字的形状，另去掉值为 false 的字段）；常量与 npm 包出自同一份数据（`scripts/lib/gen-constants.mjs` 的 `buildConstants`），用只读映射与 `Literal`。生成物经 ruff format 格式化，ruff lint 不检生成目录。
   - 手写部分：`_base.py`（生成模型的基类）、`models.py`（薄包装：泛型 + 生成工具表达不了的约束）、`__init__.py`（对外导出）。
   - 证据：`pnpm check` 退出码 0（含样例校验、24 个生成物一致、版本一致、TS 类型检查与 vitest、`pytest` 603 项、npm 构建产物检查、wheel 构建）。手改 `paged_list.py` 的一个上限 → `pnpm check:generated` 退出码 1，`pnpm gen` 后 0。`python/pyproject.toml` 版本改成 0.0.1 → `pnpm check:versions` 退出码 1，改回后 0。构建出的 wheel 装进隔离环境（非可编辑安装）跑全部测试：Python 3.12 + pydantic 2.14.3、Python 3.12 + pydantic 2.11.10、Python 3.10 + pydantic 2.14.3 均 603 项通过。
+- 2026-11-25 ⓔ：`MODULES.md` 里 `pypi-package` 由 `not_implemented` 改为 `active`。`SNAPSHOT.md` 替换的事实：`pypi-package` 一行由「未实现」改为 Python 包现状；`toolchain` 一行补上 Python 生成、版本检查、Python 测试与 wheel 构建；补充检查关键字一条由「各语言包须另行实现」改为「Python 包在 `models.py` 里实现」；泛型包装一条补上 Python 侧做法；新增「Python 与定义的一致性」「版本」两条契约与 Python 技术基线。没有移出的史料。共享骨架：本批改了 `package.json`（检查命令与提交钩子），在串首声明的独占范围内；另改了仓根 `AGENTS.md` 的命令表（补 `pnpm gen` / `pnpm check`）。
+
+## 交付
+
+条目 `7qc5mh`：9196abb（Python 包、生成链、包装层、同组样例测试、版本一致检查）· 归档提交（领域状态、快照、归档）。结果：`pnpm check` 退出码 0；Python 包可在本机构建出 wheel；未发布、未 push。
