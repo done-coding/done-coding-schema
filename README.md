@@ -97,9 +97,9 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 ### 业务码
 
-通用码分两组：成功一组只有 `OK`；失败一组如下，各带固定的 HTTP 状态、能否重试与 outcome（错误体里用到通用码时必须与此一致）。
+通用码分两组：成功一组只有 `OK`；失败一组如下，各带固定的 HTTP 状态，以及能否重试与 outcome 的**缺省值**：服务未另行指定时取表中值；服务能确定更具体的重试性或执行结局时可以覆盖（如同是 `SERVICE_UNAVAILABLE`，在执行前就拒绝的可标 `not_executed`，因配置缺失而不可用、重试无用的可标不可重试），错误体里配任何合法的 `retryable` 与 `outcome` 都合法。码表在 TS 与 Python 里都是常量 `COMMON_ERROR_CODE_TABLE`；Python 另有 `default_error_detail(code)` 按码取缺省的 `error`（不是通用码时返回 `None`）。
 
-| 码 | HTTP | 可重试 | outcome | 含义 |
+| 码 | HTTP | 可重试（缺省） | outcome（缺省） | 含义 |
 |---|---|---|---|---|
 | `INVALID_REQUEST` | 400 | 否 | not_executed | 请求不符合接口契约 |
 | `UNAUTHENTICATED` | 401 | 否 | not_executed | 未登录，或令牌无效、过期 |

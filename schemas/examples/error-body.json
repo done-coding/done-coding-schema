@@ -288,6 +288,19 @@
         },
         "requestId": "req-01"
       }
+    },
+    {
+      "name": "通用码的 retryable 覆盖码表缺省值",
+      "data": {
+        "code": "RATE_LIMITED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      }
     }
   ],
   "invalid": [
@@ -1638,25 +1651,6 @@
         {
           "instancePath": "/error/fields/0/pointer",
           "keyword": "false schema"
-        }
-      ]
-    },
-    {
-      "name": "通用码的 retryable 与码表不符",
-      "data": {
-        "code": "RATE_LIMITED",
-        "message": "请求参数不合法",
-        "data": null,
-        "error": {
-          "retryable": false,
-          "outcome": "not_executed"
-        },
-        "requestId": "req-01"
-      },
-      "errors": [
-        {
-          "instancePath": "/error/retryable",
-          "keyword": "const"
         }
       ]
     }

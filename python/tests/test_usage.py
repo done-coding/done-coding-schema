@@ -12,6 +12,7 @@ from done_coding_schema_api import (
     PagedListRequest,
     ServiceErrorCodes,
     SuccessEnvelope,
+    default_error_detail,
 )
 
 
@@ -118,3 +119,23 @@ def test_integral_float_becomes_int() -> None:
 def test_non_integers_are_still_rejected(value: object) -> None:
     with pytest.raises(ValidationError):
         PagedListRequest.model_validate({"pageSize": value})
+
+
+def test_code_table_gives_defaults_that_can_be_overridden() -> None:
+    detail = default_error_detail("SERVICE_UNAVAILABLE")
+    assert detail is not None
+    assert (detail.retryable, detail.outcome) == (True, "unknown")
+    assert default_error_detail("ORDER_LOCKED") is None
+    # 服务能确定在执行前就拒绝了：覆盖 outcome 仍是合法错误体。
+    body = ErrorBody.model_validate(
+        {
+            "code": "SERVICE_UNAVAILABLE",
+            "message": "依赖暂不可用，请求未执行",
+            "data": None,
+            "error": detail.model_copy(update={"outcome": "not_executed"}).model_dump(
+                exclude_none=True
+            ),
+            "requestId": "req-03",
+        }
+    )
+    assert body.error.outcome == "not_executed"

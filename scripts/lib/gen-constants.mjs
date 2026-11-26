@@ -19,15 +19,15 @@ function resolveLocal(schema, node) {
     .reduce((current, token) => current[token], schema);
 }
 
-/** 通用失败码表：从约束里读出每个码的固定语义，并核对与 $defs/code 一致。 */
+/** 通用失败码表：读出每个码的 HTTP 状态与重试性、执行结局的缺省值，并核对与 $defs/code 一致。 */
 export function readCommonErrorCodes(schema) {
   const rows = schema.allOf.map((entry) => {
     const error = entry.then.properties.error.properties;
     return {
       code: entry.if.properties.code.const,
       httpStatus: entry["x-httpStatus"],
-      retryable: error.retryable.const,
-      outcome: error.outcome.const,
+      retryable: error.retryable.default,
+      outcome: error.outcome.default,
       meaning: entry.description,
     };
   });
@@ -115,7 +115,10 @@ export function buildConstants(entries) {
     },
     {
       name: "COMMON_ERROR_CODE_TABLE",
-      doc: ["通用失败码 → HTTP 状态、能否重试、是否已执行（outcome）与含义。"],
+      doc: [
+        "通用失败码 → HTTP 状态、能否重试与是否已执行（outcome）的缺省值、含义。",
+        "retryable 与 outcome 是缺省值：服务未另行指定时取表中值，能确定更具体的情形时可以覆盖。",
+      ],
       value: Object.fromEntries(rows.map(({ code, ...rest }) => [code, rest])),
     },
   ];

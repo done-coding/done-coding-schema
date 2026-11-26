@@ -131,7 +131,8 @@ COMMON_ERROR_CODE_TABLE: Final = MappingProxyType(
         ),
     }
 )
-"""通用失败码 → HTTP 状态、能否重试、是否已执行（outcome）与含义。"""
+"""通用失败码 → HTTP 状态、能否重试与是否已执行（outcome）的缺省值、含义。
+retryable 与 outcome 是缺省值：服务未另行指定时取表中值，能确定更具体的情形时可以覆盖。"""
 
 BOUNDED_LIST_RESPONSE_PATHS: Final = MappingProxyType({"items": "items"})
 """BoundedList 响应里各字段的路径（由定义 bounded-list.schema.json 生成）。"""

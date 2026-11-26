@@ -27,7 +27,8 @@ export const COMMON_ERROR_CODES = {
 export type CommonErrorCode =
   (typeof COMMON_ERROR_CODES)[keyof typeof COMMON_ERROR_CODES];
 /**
- * 通用失败码 → HTTP 状态、能否重试、是否已执行（outcome）与含义。
+ * 通用失败码 → HTTP 状态、能否重试与是否已执行（outcome）的缺省值、含义。
+ * retryable 与 outcome 是缺省值：服务未另行指定时取表中值，能确定更具体的情形时可以覆盖。
  */
 export const COMMON_ERROR_CODE_TABLE = {
   INVALID_REQUEST: {

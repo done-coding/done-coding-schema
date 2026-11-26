@@ -109,15 +109,6 @@ class ErrorBody(_error.ErrorBody):
     def _semantics(self) -> "ErrorBody":
         if self.code == "OK":
             raise ValueError("错误体的 code 不能是 OK")
-        row = COMMON_ERROR_CODE_TABLE.get(self.code)
-        if row is not None and (
-            self.error.retryable != row["retryable"]
-            or self.error.outcome != row["outcome"]
-        ):
-            raise ValueError(
-                f"{self.code} 的 retryable / outcome 须为 "
-                f"{row['retryable']} / {row['outcome']}"
-            )
         for index, field in enumerate(self.error.fields or []):
             if field.in_ == "body":
                 if field.pointer is None or field.parameter is not None:
@@ -131,6 +122,18 @@ class ErrorBody(_error.ErrorBody):
                     "不能有 pointer"
                 )
         return self
+
+
+def default_error_detail(code: str) -> _error.ErrorDetail | None:
+    """通用失败码的缺省处置信息（retryable 与 outcome 取码表值）；不是通用码时返回 None。
+
+    码表给的是缺省值：服务未另行指定时用它，能确定更具体的重试性或执行结局时可以覆盖，
+    如 ``default_error_detail("SERVICE_UNAVAILABLE").model_copy(update={"outcome": "not_executed"})``。
+    """
+    row = COMMON_ERROR_CODE_TABLE.get(code)
+    if row is None:
+        return None
+    return _error.ErrorDetail(retryable=row["retryable"], outcome=row["outcome"])
 
 
 class ListFilter(_filter.ListFilter):

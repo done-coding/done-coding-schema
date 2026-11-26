@@ -180,6 +180,14 @@ const describe = (error) =>
     error.params ?? {},
   )}`;
 
+/**
+ * 合法样例必须有；不合法样例只在定义含约束时要求
+ * （不含任何约束的定义，如只给缺省值的通用失败码表，写不出不合法样例）。
+ */
+const hasRequiredExamples = (examples, rootUnits) =>
+  Boolean(examples?.valid?.length) &&
+  (rootUnits.size === 0 || Boolean(examples?.invalid?.length));
+
 function main() {
   const entries = loadSchemas();
   const byFile = new Map(entries.map(({ file, schema }) => [file, schema]));
@@ -205,7 +213,7 @@ function main() {
     const rootUnits = collectUnits(file, byFile, locations);
     rootUnits.forEach((unit) => allUnits.add(unit));
     const examples = loadExamples(file);
-    if (!examples?.valid?.length || !examples?.invalid?.length) {
+    if (!hasRequiredExamples(examples, rootUnits)) {
       failures.push(`${file}：缺少合法或不合法样例`);
       continue;
     }

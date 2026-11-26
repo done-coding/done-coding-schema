@@ -29,7 +29,7 @@ export const commonErrorCodesSchema: SchemaDocument = {
   $id: "common-error-codes.schema.json",
   title: "CommonErrorCodes",
   description:
-    "通用失败码表：每个码固定 HTTP 状态（x-httpStatus）、能否重试与是否已执行。作为约束使用时（错误体引用它）：code 是通用失败码时，error.retryable 与 error.outcome 必须与本表一致。$defs/code 列出全部通用失败码，须与 allOf 各项一一对应。",
+    "通用失败码表：每个码固定 HTTP 状态（x-httpStatus），并给出能否重试与是否已执行的缺省值（default）。错误体引用本表：code 是通用失败码时，服务未另行指定 error.retryable 与 error.outcome 就取表中值；服务能确定更具体的重试性或执行结局时可以覆盖，任何合法的 retryable 与 outcome 都合法。$defs/code 列出全部通用失败码，须与 allOf 各项一一对应。",
   $defs: {
     code: {
       description: "通用失败码。",
@@ -65,10 +65,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -91,10 +91,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -117,10 +117,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -143,10 +143,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -169,10 +169,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -195,10 +195,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -221,10 +221,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -247,10 +247,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: true,
+                default: true,
               },
               outcome: {
-                const: "not_executed",
+                default: "not_executed",
               },
             },
           },
@@ -273,10 +273,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "unknown",
+                default: "unknown",
               },
             },
           },
@@ -299,10 +299,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: false,
+                default: false,
               },
               outcome: {
-                const: "unknown",
+                default: "unknown",
               },
             },
           },
@@ -325,10 +325,10 @@ export const commonErrorCodesSchema: SchemaDocument = {
           error: {
             properties: {
               retryable: {
-                const: true,
+                default: true,
               },
               outcome: {
-                const: "unknown",
+                default: "unknown",
               },
             },
           },
@@ -423,7 +423,7 @@ export const errorBodySchema: SchemaDocument = {
   $id: "error-body.schema.json",
   title: "ErrorBody",
   description:
-    "错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 必须与通用失败码表一致。",
+    "错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 的缺省值见通用失败码表，服务能确定更具体的情形时可以覆盖。",
   type: "object",
   properties: {
     code: {

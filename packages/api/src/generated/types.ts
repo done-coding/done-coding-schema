@@ -52,7 +52,7 @@ export interface CursorListCursor {
 }
 
 /**
- * 错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 必须与通用失败码表一致。
+ * 错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 的缺省值见通用失败码表，服务能确定更具体的情形时可以覆盖。
  */
 export interface ErrorBody {
   /**

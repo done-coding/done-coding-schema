@@ -32,6 +32,7 @@ from .models import (
     PagedList,
     ServiceErrorCodes,
     SuccessEnvelope,
+    default_error_detail,
 )
 
 __all__ = [
@@ -61,4 +62,5 @@ __all__ = [
     "ServiceErrorCodes",
     "SuccessCode",
     "SuccessEnvelope",
+    "default_error_detail",
 ]

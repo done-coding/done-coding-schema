@@ -71,9 +71,6 @@ CASES: dict[str, tuple[type[BaseModel], type[BaseModel], Callable[[Any], Any]]] 
 # 生成工具只读得懂字段与单字段约束；下列约束在交给它之前已去掉（见 scripts/lib/shape.mjs），
 # 由 models.py 的校验补上。
 _FALSE = "定义里写作 false 的字段生成前去掉，列表顶层又允许附带字段 → {}拒绝"
-_COMMON = (
-    "通用码语义锁（common-error-codes 的 if/then）→ ErrorBody._semantics 按码表检查"
-)
 _FIELD_AT = (
     "fields 项的 if/then/else（in 决定 pointer / parameter）→ ErrorBody._semantics"
 )
@@ -92,24 +89,6 @@ GENERATED_GAPS: dict[tuple[str, str], str] = {
         "hasMore 为 true 时 next 必有（if/then）→ CursorList._next_when_more"
     ),
     ("error-body", "code 为 OK"): "code 不能是 OK（not）→ ErrorBody._semantics",
-    ("error-body", "通用码的 retryable 与码表不符"): _COMMON,
-    **{
-        ("common-error-codes", f"{code} 的 {key} 与码表不符"): _COMMON
-        for code in (
-            "INVALID_REQUEST",
-            "UNAUTHENTICATED",
-            "FORBIDDEN",
-            "NOT_FOUND",
-            "ROUTE_NOT_FOUND",
-            "METHOD_NOT_ALLOWED",
-            "CONFLICT",
-            "RATE_LIMITED",
-            "INTERNAL_ERROR",
-            "LIST_LIMIT_EXCEEDED",
-            "SERVICE_UNAVAILABLE",
-        )
-        for key in ("retryable", "outcome")
-    },
     ("error-body", "in 为 body 缺 pointer"): _FIELD_AT,
     ("error-body", "in 为 body 带 parameter"): _FIELD_AT,
     ("error-body", "in 为 query 缺 parameter"): _FIELD_AT,
