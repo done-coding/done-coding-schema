@@ -22,8 +22,8 @@ after: ""
 | ⓒ | `pnpm check`、仓外构建、核对文件清单 | 完成 | 见进度记录 |
 | ⓓ | 上传：先 npm 后 PyPI | 完成 | 见进度记录 |
 | ⓔ | 线上核对与空目录安装 | 完成 | 见进度记录 |
-| ⓕ | 推送 master、`feat/schema-v0` 与版本标签 | 待做 | |
-| ⓖ | 快照、`docs/release.md`「本机发布」、归档。收工 | 待做 | |
+| ⓕ | 推送 master、`feat/schema-v0` 与版本标签 | 交维护者执行 | 本会话的 `git push` 被权限设置拒绝，未推送；命令见进度记录 |
+| ⓖ | 快照、`docs/release.md`「本机发布」、归档。收工 | 完成 | bdeb0d2（本机发布一节）· 归档提交 |
 
 ## 进度记录
 
@@ -47,3 +47,14 @@ after: ""
   - 空目录（npm）：`npm install @done-coding/schema-api@alpha typescript@5.9.3`（官方源）装到 0.0.1-alpha.0，包内带 `LICENSE`。npm 包 README 的 TS 片段原样 `tsc` 通过（`moduleResolution: Bundler`，`strict`，`skipLibCheck: false`）。追加把 `totalRecord` 拼成 `totalRecords` 后报 TS2551。运行时 ESM 导入得到 `page.pageSize` 与 10 份定义，CJS `require` 也得到 `page.pageSize`。
   - 空目录（pip）：Python 3.12 新虚拟环境，`pip install --pre --index-url https://pypi.org/simple/ done-coding-schema-api` 装到 0.0.1a0（pydantic 2.14.4），dist-info 带 `licenses/LICENSE`。Python 包 README 片段原样运行通过；仓根 README 的 Python 例子原样运行，输出 `甲`、`429`、`page.pageSize`，与注释一致；`totalPage` 与 `ceil(totalRecord/pageSize)` 不符的请求被拒。下载过程中 files.pythonhosted.org 断连，第二次安装成功。
 - 2026-11-26 ⓖ（部分）：`docs/release.md` 新增「本机发布」一节，记录这次实际用的步骤（令牌只写占位，不写文件位置）。
+- 2026-11-26 ⓕ 推送：推送前扫描了 aa49790 之后的全部提交，没有本机路径、令牌文件位置或令牌片段。在本会话执行 `git push origin master` 时被权限设置拒绝（工具层拒绝，没有连到远端），所以没有改用别的方式推送，交维护者执行。要推的是 `master`（87665c0，未改动）、`feat/schema-v0`（含本批归档提交）和标签 `@done-coding/schema-api@0.0.1-alpha.0`。命令：`git push origin master feat/schema-v0 'refs/tags/@done-coding/schema-api@0.0.1-alpha.0'`。不建 prerelease / release 分支。
+- 2026-11-26 ⓖ：`SNAPSHOT.md` 替换的事实：
+  - `toolchain` 一行补上 `pnpm check:license`；工作流从「未实际运行过」改为「尚未在 GitHub 上实际运行过，已有的预发布版是本机发布的」。
+  - `npm-package`、`pypi-package` 从「未发布」改为各自的预发布版本号与安装方式。
+  - 「版本」契约从「两包均未发布」改为当前的已发布版本与标签。
+  - 技术基线的发布一条补上「本机发布」，新增许可证一条。
+  - 没有移出的史料。共享骨架：本批改了仓根 `package.json`（新增 `check:license`）、`LICENSE`，均为本批独占。
+
+## 交付
+
+条目 `2f6iq1`：8778e91（许可证与 `check:license`）· ba32c3a（版本提交 0.0.1-alpha.0 / 0.0.1a0 与标签）· bdeb0d2（本机发布步骤）· 归档提交（快照、归档）。结果：npm `@done-coding/schema-api@0.0.1-alpha.0`（dist-tag `alpha`）与 PyPI `done-coding-schema-api==0.0.1a0` 已发布，均带 MIT 全文；空目录分别从线上安装，README 例子跑通。推送未完成，交维护者执行（见 ⓕ）。
