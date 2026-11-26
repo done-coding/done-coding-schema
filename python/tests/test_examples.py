@@ -76,7 +76,10 @@ _FIELD_AT = (
 )
 _STAGE = "stage 的 if/then/else → ServiceErrorCodes._codes"
 _RESERVED = "保留码与通用码（not）→ ServiceErrorCodes._codes"
-_CEIL = "x-totalPageEqualsCeil 与 totalRecord 为 0 的 if/then → PagedList._total_page"
+_CEIL = (
+    "x-totalPageEqualsCeil 与 totalRecord 为 0 的 if/then → PagedList._page_consistency"
+)
+_ITEMS = "x-itemsWithinPage → PagedList._page_consistency"
 
 GENERATED_GAPS: dict[tuple[str, str], str] = {
     ("bounded-list", "带 page"): _FALSE.format("BoundedList._no_paging "),
@@ -85,6 +88,10 @@ GENERATED_GAPS: dict[tuple[str, str], str] = {
     ("cursor-list", "同时带 page"): _FALSE.format("CursorList._no_page "),
     ("paged-list", "totalPage 不等于 ceil(totalRecord / pageSize)"): _CEIL,
     ("paged-list", "总数为 0 时 totalPage 不为 0"): _CEIL,
+    ("paged-list", "items 条数超过 pageSize"): _ITEMS,
+    ("paged-list", "items 条数超过 totalRecord"): _ITEMS,
+    ("paged-list", "总数为 0 时 items 不为空"): _ITEMS,
+    ("paged-list", "items 条数同时超过 pageSize 与 totalRecord"): _ITEMS,
     ("cursor-list", "还有更多却没给 next"): (
         "hasMore 为 true 时 next 必有（if/then）→ CursorList._next_when_more"
     ),

@@ -18,7 +18,7 @@ after: ""
 | 序 | 任务 | 状态 | 证据 |
 |---|---|---|---|
 | ⓒ | 整数字段接受值为整数的浮点 | 完成 | 见进度记录 |
-| ⓓ | 页码式列表条数约束 | 进行中 | |
+| ⓓ | 页码式列表条数约束 | 完成 | 见进度记录 |
 | ⓔ | 校验器报错位置指到具体字段 | 完成 | 见进度记录 |
 | ⓐ | Python 包带定义文件与取用函数 | 待做 | |
 | ⓑ | 模型导出的 JSON Schema 为源定义 | 待做 | |
@@ -54,3 +54,7 @@ after: ""
     - 可选字段显式 null 指到该字段。
   - 错误类型（自定）：`field_forbidden`、`field_required`、`null_forbidden`、`total_page_mismatch`、`code_reserved`、`duplicate_value`、`array_contains_property`、`condition_empty`。
   - 新增 `tests/test_error_locations.py`，12 组用例逐项核对位置集合。
+- 2026-11-26 ⓓ 条数约束：
+  - 写法沿用同类的跨字段约束 `x-totalPageEqualsCeil`：在 `paged-list.schema.json` 顶层加补充检查关键字 `x-itemsWithinPage: true`，定义说明里写明这条约束。只加约束，不改字段，也不增减结构。理由：标准 JSON Schema 表达不了；写进定义，才能让仓内的定义校验（Ajv + x- 关键字）与 Python 对同一份数据给出相同结论（ⓗ）。普通校验器会忽略它，TS 侧在 README 说明。
+  - `validator.mjs` 实现：条数超过 pageSize、超过 totalRecord 各报一项，位置 `/items`；上限本身不合法时不报，交给标准关键字。Python 在 `PagedList._page_consistency` 实现，位置 `("items",)`。
+  - 样例：2 个合法例（条数恰等于 pageSize、恰等于 totalRecord），4 个反例（超 pageSize、超 totalRecord、总数为 0 却有数据、两者都超）。约束共 158 条，全部有反例覆盖。

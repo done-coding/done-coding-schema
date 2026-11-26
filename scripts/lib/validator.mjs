@@ -13,6 +13,8 @@ export const ANNOTATION_KEYWORDS = [
 ];
 
 const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
+const isPlainObject = (value) =>
+  value !== null && typeof value === "object" && !Array.isArray(value);
 
 /** 补充检查：返回出错项（不含 keyword / parentSchema，由外层补上）。 */
 export const CHECK_KEYWORDS = {
@@ -43,6 +45,34 @@ export const CHECK_KEYWORDS = {
               message: `totalPage 应为 ceil(totalRecord / pageSize) = ${expected}`,
             },
           ];
+    },
+  },
+  /** 页码式：items 条数不超过 page.pageSize，也不超过 page.totalRecord。 */
+  "x-itemsWithinPage": {
+    type: "object",
+    schemaType: "boolean",
+    check(enabled, data, instancePath) {
+      const { items, page } = data;
+      if (!enabled || !Array.isArray(items) || !isPlainObject(page)) return [];
+      // 上限本身不合法时交给标准关键字报错，这里不重复报。
+      const limits = {
+        pageSize:
+          Number.isInteger(page.pageSize) &&
+          page.pageSize >= 1 &&
+          page.pageSize <= 100
+            ? page.pageSize
+            : undefined,
+        totalRecord: isNonNegativeInteger(page.totalRecord)
+          ? page.totalRecord
+          : undefined,
+      };
+      return Object.entries(limits)
+        .filter(([, limit]) => limit !== undefined && items.length > limit)
+        .map(([by, limit]) => ({
+          instancePath: `${instancePath}/items`,
+          params: { by, limit, count: items.length },
+          message: `items 有 ${items.length} 条，超过 ${by}（${limit}）`,
+        }));
     },
   },
   /** 数组内各项的某个字段不重复。 */

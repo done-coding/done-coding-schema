@@ -78,10 +78,10 @@ class PagedList(_paged.PagedList, Generic[ItemT]):
         return _forbid_keys(cls, data, ("cursor",), "页码式列表")
 
     @model_validator(mode="after")
-    def _total_page(self) -> "PagedList[ItemT]":
-        # x-totalPageEqualsCeil；总数为 0 时 totalPage 为 0 也由此保证。
+    def _page_consistency(self) -> "PagedList[ItemT]":
         page = self.page
         errors = ConstraintErrors(type(self).__name__)
+        # x-totalPageEqualsCeil；总数为 0 时 totalPage 为 0 也由此保证。
         expected = -(-page.totalRecord // page.pageSize)
         if page.totalPage != expected:
             errors.add(
@@ -90,6 +90,18 @@ class PagedList(_paged.PagedList, Generic[ItemT]):
                 f"totalPage 应为 ceil(totalRecord / pageSize) = {expected}",
                 page.totalPage,
             )
+        # x-itemsWithinPage
+        for by, limit in (
+            ("pageSize", page.pageSize),
+            ("totalRecord", page.totalRecord),
+        ):
+            if len(self.items) > limit:
+                errors.add(
+                    ("items",),
+                    "items_exceed_page",
+                    f"items 有 {len(self.items)} 条，超过 {by}（{limit}）",
+                    len(self.items),
+                )
         errors.raise_if_any()
         return self
 

@@ -162,7 +162,7 @@ export interface PagedListRequest {
 }
 
 /**
- * 页码式列表，作成功外壳的 data：给人翻页的表格，能跳页、有总数。顶层允许接口自己声明的附带字段，但不得重复表达翻页信息；不带 cursor。
+ * 页码式列表，作成功外壳的 data：给人翻页的表格，能跳页、有总数。顶层允许接口自己声明的附带字段，但不得重复表达翻页信息；不带 cursor。items 的条数不超过 page.pageSize，也不超过 page.totalRecord（x-itemsWithinPage）。
  */
 export interface PagedList {
   /**

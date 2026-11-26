@@ -45,6 +45,12 @@ CASES: list[tuple[str, type[BaseModel], Any, set[tuple[Any, ...]]]] = [
         {("page", "totalPage")},
     ),
     (
+        "items 超过 pageSize 与 totalRecord",
+        PagedList,
+        {"items": [1, 2, 3], "page": {"totalRecord": 2, "pageSize": 2, "totalPage": 1}},
+        {("items",)},
+    ),
+    (
         "嵌在成功外壳里",
         SuccessEnvelope[PagedList[Any]],
         {

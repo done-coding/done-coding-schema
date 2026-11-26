@@ -86,6 +86,28 @@
           "totalPage": 3.0
         }
       }
+    },
+    {
+      "name": "items 条数恰等于 pageSize",
+      "data": {
+        "items": [1, 2],
+        "page": {
+          "totalRecord": 5,
+          "pageSize": 2,
+          "totalPage": 3
+        }
+      }
+    },
+    {
+      "name": "items 条数恰等于 totalRecord（不满一页）",
+      "data": {
+        "items": [1, 2, 3],
+        "page": {
+          "totalRecord": 3,
+          "pageSize": 10,
+          "totalPage": 1
+        }
+      }
     }
   ],
   "invalid": [
@@ -538,6 +560,98 @@
         {
           "instancePath": "/page/totalPage",
           "keyword": "x-totalPageEqualsCeil"
+        }
+      ]
+    },
+    {
+      "name": "items 条数超过 pageSize",
+      "data": {
+        "items": [1, 2, 3],
+        "page": {
+          "totalRecord": 5,
+          "pageSize": 2,
+          "totalPage": 3
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "x-itemsWithinPage",
+          "params": {
+            "by": "pageSize",
+            "limit": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "items 条数超过 totalRecord",
+      "data": {
+        "items": [1, 2],
+        "page": {
+          "totalRecord": 1,
+          "pageSize": 10,
+          "totalPage": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "x-itemsWithinPage",
+          "params": {
+            "by": "totalRecord",
+            "limit": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "总数为 0 时 items 不为空",
+      "data": {
+        "items": [1],
+        "page": {
+          "totalRecord": 0,
+          "pageSize": 10,
+          "totalPage": 0
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "x-itemsWithinPage",
+          "params": {
+            "by": "totalRecord",
+            "limit": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "items 条数同时超过 pageSize 与 totalRecord",
+      "data": {
+        "items": [1, 2, 3],
+        "page": {
+          "totalRecord": 2,
+          "pageSize": 2,
+          "totalPage": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "x-itemsWithinPage",
+          "params": {
+            "by": "pageSize",
+            "limit": 2
+          }
+        },
+        {
+          "instancePath": "/items",
+          "keyword": "x-itemsWithinPage",
+          "params": {
+            "by": "totalRecord",
+            "limit": 2
+          }
         }
       ]
     }
