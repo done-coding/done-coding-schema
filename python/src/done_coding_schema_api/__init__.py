@@ -7,6 +7,7 @@
 ``done_coding_schema_api.reference``：只引入结构时不受任何内置的码或数值约束。
 """
 
+from ._base import JsonInt
 from ._definitions import load_schema, schema_names, schema_path
 from ._generated.constants import SUCCESS_CODES, SuccessCode
 from ._generated.cursor_list import CursorListCursor
@@ -35,6 +36,7 @@ __all__ = [
     "ErrorBody",
     "ErrorDetail",
     "ErrorField",
+    "JsonInt",
     "ListFilter",
     "ListFilterCondition",
     "PagedList",

@@ -15,6 +15,7 @@ Repository = "https://github.com/done-coding/done-coding-schema"
 dev = [
   "datamodel-code-generator==0.92.0",
   "fastapi==0.162.5",
+  "jsonschema==4.26.0",
   "pytest==9.2.0",
   "ruff==0.16.9",
 ]

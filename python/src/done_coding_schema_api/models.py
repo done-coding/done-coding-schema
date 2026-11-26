@@ -21,7 +21,7 @@ from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 from typing_extensions import TypeVar
 
-from ._base import ConstraintErrors, source_json_schema
+from ._base import ConstraintErrors
 from ._generated import bounded_list as _bounded
 from ._generated import cursor_list as _cursor
 from ._generated import error_body as _error
@@ -29,6 +29,7 @@ from ._generated import list_filter as _filter
 from ._generated import paged_list as _paged
 from ._generated import service_error_codes as _service
 from ._generated import success_envelope as _success
+from ._source import source_json_schema
 
 DataT = TypeVar(
     "DataT",

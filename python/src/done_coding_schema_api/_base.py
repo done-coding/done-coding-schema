@@ -7,108 +7,21 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     GetJsonSchemaHandler,
-    RootModel,
     Strict,
     ValidationError,
     model_validator,
 )
-from pydantic.fields import FieldInfo
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, InitErrorDetails, PydanticCustomError
 
-from ._definitions import bundled_schema, source_of
+from ._source import (
+    adopt_source_integers,
+    integral_float_to_int,
+    source_constraint_errors,
+    source_json_schema,
+)
 
 Loc = tuple[str | int, ...]
-
-_GENERATED_MODULES = f"{__package__}._generated."
-
-
-def _generated_class(model: type[BaseModel]) -> type[BaseModel] | None:
-    """继承链上第一个能按类名（即定义的 title）找到源定义的生成类。"""
-    return next(
-        (
-            klass
-            for klass in model.__mro__
-            if klass.__module__.startswith(_GENERATED_MODULES)
-            and source_of(klass.__name__) is not None
-        ),
-        None,
-    )
-
-
-def _has_type_arguments(model: type[BaseModel]) -> bool:
-    """模型或其父类给了泛型类型参数（PagedList[User]，或 class UserPage(PagedList[User])）。"""
-    return any(
-        getattr(klass, "__pydantic_generic_metadata__", {}).get("args")
-        for klass in model.__mro__
-    )
-
-
-def _field_changed(field: FieldInfo, original: FieldInfo) -> bool:
-    """子类重新声明了字段（改了类型、默认值、约束、说明等任一项）。"""
-    return repr(field) != repr(original)
-
-
-def source_json_schema(
-    model: type[BaseModel], core_schema: CoreSchema, handler: GetJsonSchemaHandler
-) -> JsonSchemaValue:
-    """模型导出的 JSON Schema = 对应的源定义 + 子类的改动。
-
-    - 沿继承链找到生成的类，按类名（即定义的 title）定位源定义，展开引用后原样带出，
-      x- 约束一并保留；找不到则用 pydantic 的默认结果；
-    - 泛型给了类型参数时（直接参数化或继承参数化的类），``__schema_type_params__``
-      列出的字段（items 的元素、data）换成类型参数生成的结构；
-    - 子类重新声明的已有字段（加上限、加默认、收窄类型等）：在源定义的该字段上叠加
-      pydantic 为新声明生成的关键字，源定义的其余约束保留；是否必填按新声明；
-    - 子类另外声明、源定义里没有的字段，按 pydantic 的默认结果补进 properties。
-    """
-    generated_class = _generated_class(model)
-    if generated_class is None:
-        return handler(core_schema)
-    schema = bundled_schema(*source_of(generated_class.__name__))  # type: ignore[misc]
-    properties = schema.get("properties", {})
-    type_params = getattr(model, "__schema_type_params__", ())
-    typed = type_params if _has_type_arguments(model) else ()
-    # RootModel 的 root 是整体本身，不是字段。
-    fields = {} if issubclass(model, RootModel) else model.__pydantic_fields__
-    originals = generated_class.__pydantic_fields__
-    changed: list[str] = []
-    extra: list[str] = []
-    for name, field in fields.items():
-        key = field.alias or name
-        if key not in properties:
-            extra.append(key)
-        elif name not in type_params and _field_changed(field, originals[name]):
-            changed.append(key)
-    if not typed and not changed and not extra:
-        return schema
-    default = handler.resolve_ref_schema(handler(core_schema))
-    generated = default.get("properties", {})
-    for name in typed:
-        if name == "items":
-            properties["items"] = {
-                **properties["items"],
-                "items": generated["items"]["items"],
-            }
-        else:
-            description = properties[name].get("description")
-            properties[name] = {
-                **({"description": description} if description else {}),
-                **generated[name],
-            }
-    generated_required = set(default.get("required", []))
-    required = [key for key in schema.get("required", []) if key not in changed]
-    for key in changed:
-        overlay = {k: v for k, v in generated[key].items() if k != "title"}
-        properties[key] = {**properties[key], **overlay}
-    for key in extra:
-        schema.setdefault("properties", properties)[key] = generated[key]
-    for key in [*changed, *extra]:
-        if key in generated_required and key not in required:
-            required.append(key)
-    if required or "required" in schema:
-        schema["required"] = required
-    return schema
 
 
 class ConstraintErrors:
@@ -136,18 +49,12 @@ class ConstraintErrors:
             raise ValidationError.from_exception_data(self._title, self._errors)
 
 
-def _integral_float_to_int(value: Any) -> Any:
-    """值为整数的浮点（JSON 里的 12.0）按 JSON Schema 算整数，归一成 int。"""
-    if isinstance(value, float) and value.is_integer():
-        return int(value)
-    return value
-
-
-JsonInt = Annotated[int, BeforeValidator(_integral_float_to_int), Strict()]
+JsonInt = Annotated[int, BeforeValidator(integral_float_to_int), Strict()]
 """定义里 type: integer 的字段。
 
 与 JSON Schema 的 integer 一致：接受整数与值为整数的浮点（12.0 → 12）；12.5、
 字符串 "12"、布尔仍拒绝。Strict() 让它在不继承基类配置的 RootModel 里也一样严格。
+使用方在子类里重新声明整数字段时也用它，如 ``pageSize: JsonInt = Field(default=20, le=50)``。
 """
 
 
@@ -160,8 +67,8 @@ class SchemaModel(BaseModel):
       model_config 覆盖为 forbid；
     - serialize_by_alias / validate_by_name：输出用线上字段名（如 ErrorField 的 in），
       Python 里也可以用字段名（in_）构造；
-    - 导出的 JSON Schema（model_json_schema()、FastAPI 生成的 OpenAPI）就是源定义，
-      见 source_json_schema。
+    - 导出的 JSON Schema（model_json_schema()、FastAPI 生成的 OpenAPI）是源定义加子类的改动；
+      子类重新声明的字段仍要满足源定义，见 _source。
     """
 
     model_config = ConfigDict(
@@ -199,3 +106,24 @@ class SchemaModel(BaseModel):
                         )
             errors.raise_if_any()
         return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def _adopt_source_integers(cls, data: Any) -> Any:
+        """子类重新声明的整数字段沿用 JsonInt 的语义（12.0 → 12），见 _source。"""
+        return adopt_source_integers(cls, data)
+
+    @model_validator(mode="after")
+    def _keep_source_constraints(self) -> Any:
+        """子类重新声明的字段仍要满足源定义（子类只能收紧，不能放宽），
+        与导出的结构（源定义与新声明的交集）同结论。"""
+        errors = ConstraintErrors(type(self).__name__)
+        for wire, detail in source_constraint_errors(self):
+            errors.add(
+                (wire, *detail["loc"]),
+                detail["type"],
+                f"不满足定义对该字段的约束：{detail['msg']}",
+                detail["input"],
+            )
+        errors.raise_if_any()
+        return self

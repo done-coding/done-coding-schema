@@ -4,8 +4,8 @@
 from typing import Annotated, Any, Literal
 
 import pytest
-from fastapi import Body, FastAPI, Query
-from pydantic import BaseModel, Field
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
 
 from done_coding_schema_api import (
     BoundedList,
@@ -163,64 +163,6 @@ def test_unparameterized_subclass_keeps_item_type(model: type[BaseModel]) -> Non
     assert set(exported["$defs"]) == {"User"}
 
 
-class OrderPageRequest(PagedListRequest):
-    """使用方声明自己的每页条数：默认 20、上限 50。"""
-
-    pageSize: int = Field(default=20, le=50)
-
-
-class OrderFailure(ErrorBody):
-    """使用方把错误体的 code 收窄到自己的一组。"""
-
-    code: Literal["ORDER_LOCKED", "ORDER_GONE"]
-
-
-def test_subclass_field_changes_are_exported() -> None:
-    source = PagedListRequest.model_json_schema()["properties"]["pageSize"]
-    exported = OrderPageRequest.model_json_schema()
-    # 源定义的说明与下限保留，叠加子类的默认值与上限。
-    assert exported["properties"]["pageSize"] == {
-        **source,
-        "default": 20,
-        "maximum": 50,
-    }
-    assert source == {
-        "description": source["description"],
-        "type": "integer",
-        "minimum": 1,
-    }
-    # 未改的字段仍是源定义。
-    assert (
-        exported["properties"]["query"]
-        == PagedListRequest.model_json_schema()["properties"]["query"]
-    )
-    assert "required" not in exported
-
-
-def test_subclass_narrowed_field_is_exported() -> None:
-    exported = OrderFailure.model_json_schema()
-    code = exported["properties"]["code"]
-    assert code["enum"] == ["ORDER_LOCKED", "ORDER_GONE"]
-    # 源定义的格式约束与 not OK 一并保留。
-    assert code["pattern"] == "^[A-Za-z][A-Za-z0-9_]{0,127}$"
-    assert code["not"] == {"const": "OK"}
-    assert "code" in exported["required"]
-    assert (
-        exported["properties"]["error"]
-        == ErrorBody.model_json_schema()["properties"]["error"]
-    )
-
-
-def test_subclass_making_required_field_optional() -> None:
-    class LenientFailure(ErrorBody):
-        requestId: str = "unknown"
-
-    exported = LenientFailure.model_json_schema()
-    assert "requestId" not in exported["required"]
-    assert exported["properties"]["requestId"]["default"] == "unknown"
-    assert exported["properties"]["requestId"]["pattern"] == "^\\S{1,128}$"
-
-
 def _allows_null(schema: Any) -> bool:
     if not isinstance(schema, dict):
         return False
@@ -275,36 +217,3 @@ def test_fastapi_openapi_uses_source_definitions() -> None:
     assert components[paged]["properties"]["items"]["items"] == {
         "$ref": "#/components/schemas/User"
     }
-
-
-def test_fastapi_openapi_reflects_subclass_changes() -> None:
-    class UserPage(PagedList[User]):
-        pass
-
-    app = FastAPI()
-
-    @app.get("/orders")
-    def list_orders(params: Annotated[OrderPageRequest, Query()]) -> UserPage: ...
-
-    @app.get("/failure", response_model=OrderFailure)
-    def failure() -> Any: ...
-
-    document = app.openapi()
-    components = document["components"]["schemas"]
-    page_size = next(
-        parameter
-        for parameter in document["paths"]["/orders"]["get"]["parameters"]
-        if parameter["name"] == "pageSize"
-    )
-    # 查询参数模型由 FastAPI 逐字段展开，用的是字段自身的声明而不是模型导出的结构，
-    # 所以这里只有子类写出的默认值与上限（已知限制，README 有说明）。
-    assert page_size["schema"]["default"] == 20
-    assert page_size["schema"]["maximum"] == 50
-    assert components["UserPage"]["properties"]["items"]["items"] == {
-        "$ref": "#/components/schemas/User"
-    }
-    failure_schema = components["OrderFailure"]
-    assert failure_schema["properties"]["code"]["enum"] == [
-        "ORDER_LOCKED",
-        "ORDER_GONE",
-    ]
