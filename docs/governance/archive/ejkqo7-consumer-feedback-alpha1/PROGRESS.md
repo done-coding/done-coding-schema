@@ -25,8 +25,8 @@ after: ""
 | ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 完成 | 见进度记录 |
 | ⓕ′ | 通用码的 retryable / outcome 改为缺省值（更正） | 完成 | 见进度记录 |
 | ⓖ | 不加个人信息过滤等规则 | 完成 | 不改动 |
-| 发布 | 第二个预发布版：检查、构建、上传、线上核对 | 进行中 | |
-| 收口 | 快照、归档。收工 | 待做 | |
+| 发布 | 第二个预发布版：检查、构建、上传、线上核对 | 完成 | 5f3d0a0，见进度记录 |
+| 收口 | 快照、归档。收工 | 完成 | 归档提交 |
 
 ## 进度记录
 
@@ -90,3 +90,49 @@ after: ""
   - 构建产物无 Node 专用依赖；wheel 与 sdist 各含 10 份定义文件与 LICENSE。
   - 最低支持版本另验：Python 3.10.20 加 pydantic 2.11.10，装本机构建的 wheel 跑全部 693 个测试，全部通过（已确认导入的是装好的 wheel，不是源码目录）。这一项同时验证了报错位置与导出钩子在 2.11 上可用。
 - 2026-11-26 `0.0.0-stage` 调查：npm 上这个版本创建于 08:16:20Z，比 0.0.1-alpha.0（08:19:28Z）早 3 分钟。发布者是同一账号，包内只有 `package.json`（`"stub": true`，描述为 "Temporary package placeholder for staged publishing"）和一份 README（"temporary placeholder… awaiting a staged release"）。上一批发布时 npm 回显了 "Your package is being processed and may take a few minutes to become available"。判断：这是注册表在新包首次发布、走分阶段发布处理时自动放的占位版本，不是本仓发出的内容。依据是包内文字和时间线，没有找到注册表的文档说明，置信度中等偏高。不在任何 dist-tag 上，建议用 `npm deprecate` 标成弃用，由维护者决定，本批不执行。
+- 2026-11-26 发布（按 `docs/release.md`「本机发布」）：
+  - 定版本：`lerna version prerelease --preid alpha --no-push`，npm 0.0.1-alpha.0 → 0.0.1-alpha.1，Python 0.0.1a0 → 0.0.1a1。版本提交 5f3d0a0，标签 `@done-coding/schema-api@0.0.1-alpha.1`。在版本提交上再跑一次 `pnpm check`，退出码 0。
+  - 仓外构建：npm 16 个文件；wheel 含 `_definitions.py` 与 `schemas/` 下 10 份定义；sdist 同样含这些。三个包解开后扫过，没有本机路径。
+  - 上传：npm `+ @done-coding/schema-api@0.0.1-alpha.1`（tag alpha）；PyPI 的 wheel 与 sdist 都上传成功。令牌只经环境变量传入，npmrc 里只有占位。
+- 2026-11-26 线上核对：
+  - npm dist-tags：`alpha` = 0.0.1-alpha.1，`latest` 仍是 0.0.1-alpha.0（只有首次发布会自动设 latest）。
+  - PyPI 0.0.1a1，license MIT，文件为 wheel 与 sdist，sha256 与本机构建相同（wheel 1b4b3c55…，sdist df3d1b39…）。
+  - 空目录（npm）：`npm install @done-coding/schema-api@alpha typescript@5.9.3 ajv@8.20.0` 装到 0.0.1-alpha.1。npm 包 README 片段 `tsc` 通过；CJS 可用。用包内定义加 Ajv（strict: false）判：错误体 code 为 OK 判 false；SERVICE_UNAVAILABLE 覆盖 outcome、覆盖 retryable 都判 true；pageSize 为 `12.0`（JSON 解析）判 true，为 12.5 判 false。码表常量照常导出缺省值。
+  - 空目录（pip）：Python 3.12 新环境，`pip install --pre` 装到 0.0.1a1（pydantic 2.14.4），另装 fastapi 0.162.5。验证结果：
+    - 仓根 README 的两段 Python 与包 README 片段原样运行通过。
+    - `12.0` 归一成 int 12。
+    - 外壳里的列表超条数时，报错位置 `('data','items')`；totalPage 不对时 `('data','page','totalPage')`。
+    - 用 `default_error_detail` 覆盖 outcome 的错误体合法。
+    - `PagedList.model_json_schema()` 带 `x-itemsWithinPage`，说明文字与 `load_schema` 一致。
+    - FastAPI 生成的 OpenAPI 里，`ErrorBody.detail` 是 `{type: string, description}`，不含 null。
+- 2026-11-26 收口：`SNAPSHOT.md` 替换的事实：
+  - `definition` 一行注明码表只有合法样例。
+  - `toolchain` 一行补上：生成 Python 定义文件与 JsonInt 替换；`check:wheel` 改为核对产物。
+  - `npm-package`、`pypi-package` 两行改为当前版本与 dist-tag；`pypi-package` 补上定义文件取用函数、`default_error_detail`、JsonInt 与报错收集。
+  - 契约：「锁定通用码语义」改为「码表固定 HTTP 状态，retryable / outcome 只是缺省值」；补充检查关键字加上 `x-itemsWithinPage` 与报错位置；新增「导出即定义」一条；版本一条改为当前最新预发布。
+  - 技术基线：补 JsonInt 与 FastAPI 开发依赖。
+  - 没有移出的史料。
+  - 共享骨架：改了仓根 `package.json`（`check:wheel`、lint-staged）与 `python/uv.lock`，均为本批独占。
+- 留给维护者（本批不执行）：
+  - 推送 master、`feat/schema-v0` 与本批标签：`git push origin master feat/schema-v0 'refs/tags/@done-coding/schema-api@0.0.1-alpha.0' 'refs/tags/@done-coding/schema-api@0.0.1-alpha.1'`（上一批的标签也还没推）。
+  - 是否把 npm `latest` 移到 0.0.1-alpha.1：`npm dist-tag add @done-coding/schema-api@0.0.1-alpha.1 latest`。不移的话，不带标签的 `npm install` 会装到不含本批修正的 0.0.1-alpha.0。
+  - 是否弃用 0.0.0-stage：`npm deprecate @done-coding/schema-api@0.0.0-stage "注册表占位版本，请安装 alpha"`。
+
+## 交付
+
+条目 `7tf5h6`：
+- 4feda66：ⓒ 整数。
+- f4b57ea：码表改为缺省值（更正）。
+- 23be127：ⓔ 报错位置。
+- c97c37c：ⓓ 条数约束。
+- b55ea7c：ⓐ 定义文件进 Python 包。
+- 0cd4e3c：ⓑ 导出即定义。
+- 3f222a3：ⓕⓗ README 与样例。
+- 15c3d4f：发布前记录。
+- 5f3d0a0：版本 0.0.1-alpha.1 / 0.0.1a1。
+- 归档提交：快照、归档。
+
+结果：
+- 两种语言对同一批样例逐例结论相同：合法 102 例、不合法 211 例，约束 158 条全覆盖。
+- 第二个预发布版已在 npm（alpha）与 PyPI 发布，空目录各装一次验证通过。
+- 推送未做，由维护者执行。
