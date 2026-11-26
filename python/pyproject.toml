@@ -1,6 +1,6 @@
 [project]
 name = "done-coding-schema-api"
-version = "0.0.1a0"
+version = "0.0.1a1"
 description = "跨前后端通用接口结构的 Pydantic 模型与常量"
 readme = "README.md"
 license = "MIT"
