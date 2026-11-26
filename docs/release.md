@@ -45,6 +45,40 @@ uv build --project python --out-dir <输出目录>
 
 核对输出目录里 npm 包（`.tgz`）与 Python 包（`.whl`、`.tar.gz`）的版本相同，文件清单与上一次发布相比没有意外的增减。
 
+## 本机发布
+
+不经工作流、由维护者在本机发布时的做法（首个预发布 `0.0.1-alpha.0` / `0.0.1a0` 即按此发出）。每次发布须维护者本人授权；令牌由维护者存在仓外、仅本人可读的文件里，只在发布命令的同一条 shell 里经命令替换读入环境变量，不打印、不写进仓内文件、`~/.npmrc` 或提交说明。
+
+1. 在要发布的分支上、工作树干净时定版本（只在本地生成版本提交与标签，不推送）：
+
+   ```bash
+   # 预发布
+   npx lerna version prerelease --yes --preid alpha --no-push --message "chore(prerelease): publish [skip ci]"
+   ```
+
+   `version` 生命周期脚本会把同一版本同步给 Python 包，并放进同一个版本提交。
+
+2. `pnpm check` 全过；按上一节构建到仓外的输出目录，核对两包版本相同、都带 `LICENSE`、文件清单没有意外增减。
+
+3. 先上传 npm：在仓外临时目录放一个 npmrc，内容只有 `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`（由 npm 展开环境变量，文件里不落令牌），从该目录执行：
+
+   ```bash
+   NODE_AUTH_TOKEN="$(cat <npm 令牌文件>)" npm publish <输出目录>/<包名>-<版本>.tgz \
+     --tag alpha --access public --registry https://registry.npmjs.org/ --userconfig <临时 npmrc>
+   ```
+
+   本机 npm 的默认源可能是镜像，`--registry` 须写官方源。正式版把 `--tag alpha` 换成默认的 `latest`。
+
+4. 再上传 PyPI（wheel 与 sdist）：
+
+   ```bash
+   UV_PUBLISH_TOKEN="$(cat <PyPI 令牌文件>)" uv publish --check-url https://pypi.org/simple/ <输出目录>/*.whl <输出目录>/*.tar.gz
+   ```
+
+5. 核对：`npm view @done-coding/schema-api dist-tags --registry https://registry.npmjs.org/` 与 PyPI 项目页的版本一致；空目录各装一次线上包（npm 用对应 dist-tag，pip 装预发布加 `--pre`），跑通 README 的最小例子。新上传的包要过几分钟才查得到。
+
+6. 推送分支与版本标签：`git push origin <分支>` 与 `git push origin <标签>`。
+
 ## 中途失败
 
 - 第 3、4 步失败：什么都没上传，修好后重新合并即可。
