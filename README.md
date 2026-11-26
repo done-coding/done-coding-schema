@@ -4,10 +4,12 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 | 语言 | 包 | 内容 |
 |---|---|---|
-| TypeScript / JavaScript | npm [`@done-coding/schema-api`](https://www.npmjs.com/package/@done-coding/schema-api) | 类型、业务码与字段路径常量、定义文件；可在浏览器端引入 |
-| Python | PyPI [`done-coding-schema-api`](https://pypi.org/project/done-coding-schema-api/)（导入名 `done_coding_schema_api`） | Pydantic v2 模型、常量与定义文件 |
+| TypeScript / JavaScript | npm [`@done-coding/schema-api`](https://www.npmjs.com/package/@done-coding/schema-api) | 类型、成功码、结构定义文件；参考资源在子路径 `@done-coding/schema-api/reference`；可在浏览器端引入 |
+| Python | PyPI [`done-coding-schema-api`](https://pypi.org/project/done-coding-schema-api/)（导入名 `done_coding_schema_api`） | Pydantic v2 模型、成功码、结构定义文件；参考资源在子模块 `done_coding_schema_api.reference` |
 
 两个包从同一个提交构建、用同一个版本号。定义文件在 [`schemas/`](schemas/)，每个结构配有合法与不合法样例（[`schemas/examples/`](schemas/examples/)）。
+
+**结构与参考资源分两个出口**：主入口只有结构，只引入结构时不受任何内置的码或数值约束。通用失败码与码表、列表的字段路径与参数名、参考数值（如每页 10 条、上限 100）都是参考资源，放在参考资源出口；包不替使用方填写，要用须显式引入、显式写进自己的代码（见「使用方怎样显式声明自己的配置」）。
 
 ## 通用约定
 
@@ -88,19 +90,21 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 | 线上参数 | 约束 |
 |---|---|
-| `page.page` | 整数 ≥ 1，缺省 1 |
-| `page.pageSize` | 整数 1–100，缺省 10 |
+| `page.page` | 整数 ≥ 1；不带时的含义由接口自己声明 |
+| `page.pageSize` | 整数 ≥ 1；不带时的含义与上限由接口自己声明 |
 | `page.query` | 模糊搜索词，最多 200 个字符 |
-| `page.orderBy` | 逗号分隔的「小驼峰字段名 [asc\|desc]」，缺省 asc，逗号后可有一个空格，最多 200 个字符，如 `createdAt desc, name` |
+| `page.orderBy` | 逗号分隔的「小驼峰字段名 [asc\|desc]」，不写方向即 asc，逗号后可有一个空格，最多 200 个字符，如 `createdAt desc, name` |
 | `cursor.after` | 上一批返回的 `next`，首批不带 |
-| `cursor.limit` | 整数 1–100，缺省值由接口自定 |
+| `cursor.limit` | 整数 ≥ 1；不带时取多少条、上限多少由接口自己声明 |
 | `filter.<字段>.eq` | 按字段等值筛选，字段为小驼峰，值为标量（如 `filter.status.eq=active`）；可筛选哪些字段由接口声明 |
+
+结构不规定页码、每页条数、每批条数的默认值和上限，页码式列表响应里的 `pageSize` 也不设上限。参考资源出口有一组参考数值（`PAGED_LIST_REFERENCE_VALUES`：`page` 1、`pageSize` 10、`maxPageSize` 100；`CURSOR_LIST_REFERENCE_VALUES`：`maxLimit` 100），只是参考，不随结构生效。
 
 ### 业务码
 
-通用码分两组：成功一组只有 `OK`；失败一组如下，各带固定的 HTTP 状态，以及能否重试与 outcome 的**缺省值**：服务未另行指定时取表中值；服务能确定更具体的重试性或执行结局时可以覆盖（如同是 `SERVICE_UNAVAILABLE`，在执行前就拒绝的可标 `not_executed`，因配置缺失而不可用、重试无用的可标不可重试），错误体里配任何合法的 `retryable` 与 `outcome` 都合法。码表在 TS 与 Python 里都是常量 `COMMON_ERROR_CODE_TABLE`；Python 另有 `default_error_detail(code)` 按码取缺省的 `error`（不是通用码时返回 `None`）。
+通用码分两组：成功一组只有 `OK`，是成功外壳 `code` 的约束，属于结构，从主入口导出（`SUCCESS_CODES`）。失败一组如下，各带 HTTP 状态，以及能否重试与 outcome 的**参考值**。这张表是参考资源：错误体不引用它，包不替使用方填写，错误体里配任何合法的 `retryable` 与 `outcome` 都合法；使用方可显式引用表中值，能确定更具体的情形时照常改写（如同是 `SERVICE_UNAVAILABLE`，在执行前就拒绝的可标 `not_executed`，因配置缺失而不可用、重试无用的可标不可重试）。码表在参考资源出口：TS 与 Python 都是常量 `COMMON_ERROR_CODE_TABLE`；Python 另有 `reference_error_detail(code)` 按码取参考的 `error`（不是通用码时返回 `None`）。
 
-| 码 | HTTP | 可重试（缺省） | outcome（缺省） | 含义 |
+| 码 | HTTP | 可重试（参考） | outcome（参考） | 含义 |
 |---|---|---|---|---|
 | `INVALID_REQUEST` | 400 | 否 | not_executed | 请求不符合接口契约 |
 | `UNAUTHENTICATED` | 401 | 否 | not_executed | 未登录，或令牌无效、过期 |
@@ -126,7 +130,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 }
 ```
 
-码用整体大写或整体小写的下划线写法；`stage` 为 `accept`（受理时同步返回）或 `both` 时必须有 `httpStatus`，`execute`（异步执行阶段产生）不得有。不得重新定义通用码；`OK` 与 `HTTP_<数字>` 保留不用；比较按字节进行，不做大小写归一。
+码用整体大写或整体小写的下划线写法；`stage` 为 `accept`（受理时同步返回）或 `both` 时必须有 `httpStatus`，`execute`（异步执行阶段产生）不得有。`OK` 与 `HTTP_<数字>` 是结构保留字，不能用；比较按字节进行，不做大小写归一。结构不拿专有码与通用码比：清单里出现 `NOT_FOUND` 也合法；要让专有码避开某组通用码，见「使用方怎样显式声明自己的配置」。
 
 **遇到不认识的码**：按 HTTP 状态归类处理（4xx 按调用方问题、5xx 按服务端问题），再参考 `error.retryable` 与 `error.outcome` 决定能否重试。
 
@@ -139,7 +143,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 - **字段错误的 `message` 最长 1000 个字符**：与其他说明字段一致；更长的补充说明放错误体的 `detail`。
 - **字段指针整串匹配，末尾带换行不合法**：定义里的正则按 ECMA-262 语义，`$` 只匹配文本末尾；Python 包也按这个语义判，不沿用 Python `re` 里 `$` 可匹配末尾换行之前的行为。
 
-通用失败码的 `retryable` 与 `outcome` 不在此列：码表给的是缺省值，错误体里可以覆盖（见上文「业务码」）。
+通用失败码的 `retryable` 与 `outcome` 不在此列：码表给的是参考值，包不替使用方填写（见上文「业务码」）。
 
 ## 定义文件表达不了的约束
 
@@ -158,23 +162,97 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 - **本仓的样例校验**：按同一语义实现（[`scripts/lib/validator.mjs`](scripts/lib/validator.mjs)）。两种语言的结论用同一组样例逐例核对（见「开发」）。
 - **TypeScript / 其他校验器**：通用校验器会忽略这些关键字。拿定义文件自己校验时，需要的话照 `scripts/lib/validator.mjs` 补上。
 
+## 使用方怎样显式声明自己的配置
+
+包里的码和数值都不会自己生效。要用，就在自己的代码里写出来：引用包里的参考值，或写自己的值。
+
+**每页条数的默认值与上限**（Python）：子类重新声明字段。Pydantic 里重新声明的字段会整体替换原字段的校验，所以把定义里的下限 `ge=1` 一并写上：
+
+```python
+from pydantic import Field
+
+from done_coding_schema_api import PagedListRequest
+from done_coding_schema_api.reference import PAGED_LIST_REFERENCE_VALUES
+
+
+class OrderPageRequest(PagedListRequest):
+    pageSize: int = Field(default=20, ge=1, le=50)  # 自己的值
+
+
+class AuditPageRequest(PagedListRequest):
+    # 采用包里的参考值，也要显式写出来
+    pageSize: int = Field(
+        default=PAGED_LIST_REFERENCE_VALUES["pageSize"],
+        ge=1,
+        le=PAGED_LIST_REFERENCE_VALUES["maxPageSize"],
+    )
+```
+
+`OrderPageRequest.model_json_schema()` 与 FastAPI 用它作请求体或返回类型时生成的 OpenAPI，导出的是「定义 + 子类的改动」：`pageSize` 带上 `default: 20`、`maximum: 50`，定义里的说明与 `minimum: 1` 保留。用作查询参数模型（`Annotated[OrderPageRequest, Query()]`）时，FastAPI 逐字段展开参数，用的是字段自身的声明，只看得到子类写出的那几项。
+
+**每页条数的默认值与上限**（TypeScript）：类型只描述结构，取值由自己的代码决定：
+
+```ts
+import type { PagedListRequest } from "@done-coding/schema-api";
+import { PAGED_LIST_REFERENCE_VALUES } from "@done-coding/schema-api/reference";
+
+const PAGE_SIZE = { default: 20, max: 50 }; // 自己的值
+// 或采用参考值：{ default: PAGED_LIST_REFERENCE_VALUES.pageSize, max: PAGED_LIST_REFERENCE_VALUES.maxPageSize }
+
+export function pageRequest(page = 1, pageSize = PAGE_SIZE.default): PagedListRequest {
+  return { page, pageSize: Math.min(pageSize, PAGE_SIZE.max) };
+}
+```
+
+**自己的通用码集合**：引用包里的一组，再加自己的。
+
+```ts
+import { COMMON_ERROR_CODES } from "@done-coding/schema-api/reference";
+
+export const OUR_COMMON_CODES = { ...COMMON_ERROR_CODES, QUOTA_USED_UP: "QUOTA_USED_UP" } as const;
+```
+
+```python
+from done_coding_schema_api.reference import COMMON_ERROR_CODES
+
+OUR_COMMON_CODES = {**COMMON_ERROR_CODES, "QUOTA_USED_UP": "QUOTA_USED_UP"}
+```
+
+**让专有码避开自己的通用码**：结构只拦 `OK` 与 `HTTP_<数字>`。要避开哪组码，把那组码传给参考资源出口的检查函数，不传就不比；按字节比较，返回撞码的位置与码，空即没有撞码。
+
+```ts
+import type { ServiceErrorCodes } from "@done-coding/schema-api";
+import { findReservedCodes } from "@done-coding/schema-api/reference";
+
+declare const list: ServiceErrorCodes;
+const hits = findReservedCodes(list, Object.values(OUR_COMMON_CODES)); // [{ index: 1, code: "NOT_FOUND" }]
+```
+
+```python
+from done_coding_schema_api import ServiceErrorCodes
+from done_coding_schema_api.reference import find_reserved_codes
+
+codes = ServiceErrorCodes.model_validate(data)  # 结构校验
+hits = find_reserved_codes(codes, OUR_COMMON_CODES)  # [ReservedCodeHit(index=1, code='NOT_FOUND')]
+if hits:
+    raise ValueError(f"专有码与通用码重名：{hits}")
+```
+
 ## TypeScript
 
 ```bash
 npm install @done-coding/schema-api
 ```
 
-类型（成功外壳与三种列表可带元素类型）与常量：
+类型（成功外壳与三种列表可带元素类型）从主入口取，字段路径、参数名与码表从参考资源出口取：
 
 ```ts
+import type { ErrorBody, PagedList, SuccessEnvelope } from "@done-coding/schema-api";
 import {
   COMMON_ERROR_CODE_TABLE,
   PAGED_LIST_REQUEST_PARAMS,
   PAGED_LIST_RESPONSE_PATHS,
-  type ErrorBody,
-  type PagedList,
-  type SuccessEnvelope,
-} from "@done-coding/schema-api";
+} from "@done-coding/schema-api/reference";
 
 interface User {
   id: string;
@@ -199,7 +277,7 @@ const retryable: boolean = COMMON_ERROR_CODE_TABLE.RATE_LIMITED.retryable;
 
 接口在列表顶层声明的附带字段用交叉类型补：`PagedList<User> & { summary: Summary }`。
 
-**拿定义文件自己做校验**：定义以 `schemas` 导出（键为定义的 `$id`），也可按路径取 JSON 文件，如 `@done-coding/schema-api/schemas/error-body.schema.json`。定义用 JSON Schema 2020-12，例如用 [Ajv](https://ajv.js.org/)：
+**拿定义文件自己做校验**：结构定义以 `schemas` 导出（键为定义的 `$id`）；参考资源定义（通用失败码表、列表的参考数值）以 `referenceSchemas` 从参考资源出口导出。也可按路径取 JSON 文件，如 `@done-coding/schema-api/schemas/error-body.schema.json`。定义用 JSON Schema 2020-12，例如用 [Ajv](https://ajv.js.org/)：
 
 ```ts
 import Ajv2020 from "ajv/dist/2020";
@@ -226,12 +304,10 @@ pip install done-coding-schema-api
 ```python
 from pydantic import BaseModel
 
-from done_coding_schema_api import (
+from done_coding_schema_api import ErrorBody, PagedList, SuccessEnvelope
+from done_coding_schema_api.reference import (
     COMMON_ERROR_CODE_TABLE,
     PAGED_LIST_REQUEST_PARAMS,
-    ErrorBody,
-    PagedList,
-    SuccessEnvelope,
 )
 
 
@@ -266,16 +342,19 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 
 **校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。
 
-**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。
+**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型）时，导出的是定义加上子类的改动，见「使用方怎样显式声明自己的配置」。
 
-**定义文件**：包里带着与 npm 包同一批的定义文件，可以交给任何 JSON Schema 校验器：
+**定义文件**：包里带着与 npm 包同一批的定义文件，可以交给任何 JSON Schema 校验器。结构定义从包顶层取，参考资源定义从 `reference` 子模块取：
 
 ```python
 from done_coding_schema_api import load_schema, schema_names, schema_path
+from done_coding_schema_api.reference import load_reference_schema, reference_schema_names
 
-schema_names()  # ('bounded-list', 'common-error-codes', 'cursor-list', ...)
+schema_names()  # ('bounded-list', 'cursor-list', 'cursor-list-request', ...)
 schema_path("error-body")  # 包内 error-body.schema.json 的路径
 load_schema("error-body")["$id"]  # 'error-body.schema.json'（每次返回新的字典）
+reference_schema_names()  # ('common-error-codes', 'list-reference-values')
+load_reference_schema("common-error-codes")["title"]  # 'CommonErrorCodes'
 ```
 
 ## 版本与兼容
@@ -298,6 +377,6 @@ load_schema("error-body")["$id"]  # 'error-body.schema.json'（每次返回新�
 | `pnpm gen` | 由 `schemas/` 生成两个包里的类型、模型与常量（生成物不手改） |
 | `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查（含 wheel 与 sdist 里的定义文件） |
 
-**两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（`python/tests/test_examples.py`，JSON 与 Python 两种输入都测）。两边结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码覆盖缺省值这类边界。
+**两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（`python/tests/test_examples.py`，JSON 与 Python 两种输入都测）。两边结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码配任意 `retryable` / `outcome`、每页条数 500、专有码与通用码同名这类边界。
 
 发布流程见 [`docs/release.md`](docs/release.md)。
