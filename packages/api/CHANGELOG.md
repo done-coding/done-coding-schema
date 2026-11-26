@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.1-alpha.2](https://github.com/done-coding/done-coding-schema/compare/@done-coding/schema-api@0.0.1-alpha.1...@done-coding/schema-api@0.0.1-alpha.2) (2026-11-26)
+
+- feat!: 包内置的码与数值不再成为隐式默认，结构与参考资源分两个出口 ([d13195e](https://github.com/done-coding/done-coding-schema/commit/d13195ebf0fbe309793d29f5c33c31cc6bea3c74))
+
+### BREAKING CHANGES
+
+- COMMON_ERROR_CODES、CommonErrorCode、
+  COMMON_ERROR_CODE_TABLE 与六组路径、参数名常量只能从参考资源出口
+  导入；default_error_detail 改名 reference_error_detail；pageSize、
+  limit 超过 100 与专有码使用通用码名不再被拒；PagedListRequest 的
+  page、pageSize 缺失时不再填 1 和 10。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
 ## [0.0.1-alpha.1](https://github.com/done-coding/done-coding-schema/compare/@done-coding/schema-api@0.0.1-alpha.0...@done-coding/schema-api@0.0.1-alpha.1) (2026-11-26)
 
 ### Features
