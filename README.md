@@ -166,29 +166,71 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 包里的码和数值都不会自己生效。要用，就在自己的代码里写出来：引用包里的参考值，或写自己的值。
 
-**每页条数的默认值与上限**（Python）：子类重新声明字段。Pydantic 里重新声明的字段会整体替换原字段的校验，所以把定义里的下限 `ge=1` 一并写上：
+**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。
 
 ```python
 from pydantic import Field
 
-from done_coding_schema_api import PagedListRequest
+from done_coding_schema_api import JsonInt, PagedListRequest
 from done_coding_schema_api.reference import PAGED_LIST_REFERENCE_VALUES
 
 
 class OrderPageRequest(PagedListRequest):
-    pageSize: int = Field(default=20, ge=1, le=50)  # 自己的值
+    pageSize: JsonInt = Field(default=20, le=50)  # 自己的值；0 仍按定义拒绝
 
 
 class AuditPageRequest(PagedListRequest):
     # 采用包里的参考值，也要显式写出来
-    pageSize: int = Field(
+    pageSize: JsonInt = Field(
         default=PAGED_LIST_REFERENCE_VALUES["pageSize"],
-        ge=1,
         le=PAGED_LIST_REFERENCE_VALUES["maxPageSize"],
     )
 ```
 
-`OrderPageRequest.model_json_schema()` 与 FastAPI 用它作请求体或返回类型时生成的 OpenAPI，导出的是「定义 + 子类的改动」：`pageSize` 带上 `default: 20`、`maximum: 50`，定义里的说明与 `minimum: 1` 保留。用作查询参数模型（`Annotated[OrderPageRequest, Query()]`）时，FastAPI 逐字段展开参数，用的是字段自身的声明，只看得到子类写出的那几项。
+`OrderPageRequest.model_json_schema()`，以及 FastAPI 用它作请求体或返回类型时生成的 OpenAPI，导出的是定义与子类声明的交集：`pageSize` 带上 `default: 20`、`maximum: 50`，定义里的说明与 `minimum: 1` 保留。运行时的校验与导出的结构结论相同：导出写着的约束都会执行。
+
+**用作查询参数**（FastAPI）：线上参数名要用定义规定的 `page.page`、`page.pageSize`、`page.query`、`page.orderBy`（即 `PAGED_LIST_REQUEST_PARAMS`），不是字段名。查询参数都是字符串，整数参数要先解码再按定义校验：
+
+```python
+import re
+from typing import Annotated, Any
+
+from fastapi import FastAPI, Query
+from pydantic import ConfigDict, model_validator
+
+from done_coding_schema_api.reference import PAGED_LIST_REQUEST_PARAMS
+
+INTEGER_PARAMS = {PAGED_LIST_REQUEST_PARAMS["page"], PAGED_LIST_REQUEST_PARAMS["pageSize"]}
+
+
+class OrderPageQuery(OrderPageRequest):
+    model_config = ConfigDict(
+        alias_generator=lambda name: PAGED_LIST_REQUEST_PARAMS[name],  # 线上参数名
+        validate_by_name=False,  # 只认线上参数名
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _decode_integers(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return {
+                key: int(value)
+                if key in INTEGER_PARAMS and isinstance(value, str) and re.fullmatch("[0-9]+", value)
+                else value
+                for key, value in data.items()
+            }
+        return data
+
+
+app = FastAPI()
+
+
+@app.get("/orders")
+def list_orders(params: Annotated[OrderPageQuery, Query()]) -> dict[str, Any]:
+    return params.model_dump(exclude_none=True)  # ?page.pageSize=30 → {"page.pageSize": 30}
+```
+
+OpenAPI 里的参数名就是 `page.page` 等四个；`page.pageSize=0`、`=51`、`=abc`、前缀下未声明的参数都返回 422。参数各自的类型与范围由 FastAPI 按字段声明逐个展开：子类写出的默认值与上限看得到，定义里的下限不显示（运行时照常检查）。
 
 **每页条数的默认值与上限**（TypeScript）：类型只描述结构，取值由自己的代码决定：
 
@@ -218,14 +260,14 @@ from done_coding_schema_api.reference import COMMON_ERROR_CODES
 OUR_COMMON_CODES = {**COMMON_ERROR_CODES, "QUOTA_USED_UP": "QUOTA_USED_UP"}
 ```
 
-**让专有码避开自己的通用码**：结构只拦 `OK` 与 `HTTP_<数字>`。要避开哪组码，把那组码传给参考资源出口的检查函数，不传就不比；按字节比较，返回撞码的位置与码，空即没有撞码。
+**让专有码避开自己的通用码**：结构只拦 `OK` 与 `HTTP_<数字>`。要避开哪组码，把那组码传给参考资源出口的检查函数，不传就不比。可以传字符串的数组或集合，也可以传「名字 → 码」的对象 / 映射（比对的是码的值，不是键）；按字节比较，返回撞码的位置与码，空即没有撞码。
 
 ```ts
 import type { ServiceErrorCodes } from "@done-coding/schema-api";
 import { findReservedCodes } from "@done-coding/schema-api/reference";
 
 declare const list: ServiceErrorCodes;
-const hits = findReservedCodes(list, Object.values(OUR_COMMON_CODES)); // [{ index: 1, code: "NOT_FOUND" }]
+const hits = findReservedCodes(list, OUR_COMMON_CODES); // [{ index: 1, code: "NOT_FOUND" }]
 ```
 
 ```python
@@ -342,7 +384,7 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 
 **校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。
 
-**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型）时，导出的是定义加上子类的改动，见「使用方怎样显式声明自己的配置」。
+**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型、改线上字段名）时，导出的是定义与子类声明的交集，运行时同样两者都检查，见「使用方怎样显式声明自己的配置」。
 
 **定义文件**：包里带着与 npm 包同一批的定义文件，可以交给任何 JSON Schema 校验器。结构定义从包顶层取，参考资源定义从 `reference` 子模块取：
 
