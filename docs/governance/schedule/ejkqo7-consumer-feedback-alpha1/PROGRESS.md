@@ -25,7 +25,7 @@ after: ""
 | ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 完成 | 见进度记录 |
 | ⓕ′ | 通用码的 retryable / outcome 改为缺省值（更正） | 完成 | 见进度记录 |
 | ⓖ | 不加个人信息过滤等规则 | 完成 | 不改动 |
-| 发布 | 第二个预发布版：检查、构建、上传、线上核对 | 待做 | |
+| 发布 | 第二个预发布版：检查、构建、上传、线上核对 | 进行中 | |
 | 收口 | 快照、归档。收工 | 待做 | |
 
 ## 进度记录
@@ -84,3 +84,9 @@ after: ""
     - ⓕ：补「字段错误 message 恰 1000 字符」合法例；其余反例原已有。
     - 更正：码表覆盖的 23 例改为合法，其中含 SERVICE_UNAVAILABLE 的两例。
   - 当前合计合法 102、不合法 211，约束 158 条，全部有反例覆盖。
+- 2026-11-26 发布前检查：`pnpm check` 退出码 0，结果如下：
+  - 样例合法 102、不合法 211，约束 158 条全覆盖；生成物 34 个一致；版本一致；许可证一致。
+  - TS 4 个测试；Python 693 个测试。
+  - 构建产物无 Node 专用依赖；wheel 与 sdist 各含 10 份定义文件与 LICENSE。
+  - 最低支持版本另验：Python 3.10.20 加 pydantic 2.11.10，装本机构建的 wheel 跑全部 693 个测试，全部通过（已确认导入的是装好的 wheel，不是源码目录）。这一项同时验证了报错位置与导出钩子在 2.11 上可用。
+- 2026-11-26 `0.0.0-stage` 调查：npm 上这个版本创建于 08:16:20Z，比 0.0.1-alpha.0（08:19:28Z）早 3 分钟。发布者是同一账号，包内只有 `package.json`（`"stub": true`，描述为 "Temporary package placeholder for staged publishing"）和一份 README（"temporary placeholder… awaiting a staged release"）。上一批发布时 npm 回显了 "Your package is being processed and may take a few minutes to become available"。判断：这是注册表在新包首次发布、走分阶段发布处理时自动放的占位版本，不是本仓发出的内容。依据是包内文字和时间线，没有找到注册表的文档说明，置信度中等偏高。不在任何 dist-tag 上，建议用 `npm deprecate` 标成弃用，由维护者决定，本批不执行。
