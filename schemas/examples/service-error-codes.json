@@ -200,6 +200,23 @@
           }
         ]
       }
+    },
+    {
+      "name": "状态写成值为整数的浮点（如 409.0）",
+      "data": {
+        "service": "order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "both",
+            "httpStatus": 409.0,
+            "additionalHttpStatuses": [423.0],
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定"
+          }
+        ]
+      }
     }
   ],
   "invalid": [
@@ -983,6 +1000,28 @@
             "retryable": false,
             "outcome": "not_executed",
             "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 是布尔",
+      "data": {
+        "service": "order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": true,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定"
           }
         ]
       },

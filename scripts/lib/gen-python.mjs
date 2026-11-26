@@ -67,6 +67,30 @@ function uvRun(args, input) {
 export const formatPython = (source, filePath) =>
   uvRun(["ruff", "format", `--stdin-filename=${filePath}`, "-"], source);
 
+const PYDANTIC_IMPORT = /^from pydantic import (?:\(([^)]*)\)|(.*))$/m;
+
+/**
+ * 整数字段改用 _base.JsonInt：JSON Schema 的 integer 接受值为整数的浮点（12.0），
+ * pydantic 的 StrictInt 不接受。生成工具只能选 StrictInt，生成后替换。
+ */
+export function useJsonInt(source) {
+  if (!/\bStrictInt\b/.test(source)) return source;
+  const withoutImport = source.replace(
+    PYDANTIC_IMPORT,
+    (_, grouped, inline) => {
+      const names = (grouped ?? inline)
+        .split(",")
+        .map((name) => name.trim())
+        .filter((name) => name && name !== "StrictInt");
+      return `from pydantic import ${names.join(", ")}\nfrom ${PACKAGE}._base import JsonInt`;
+    },
+  );
+  if (withoutImport === source) {
+    throw new Error("生成的模块用到 StrictInt，却找不到 pydantic 的导入行");
+  }
+  return withoutImport.replace(/\bStrictInt\b/g, "JsonInt");
+}
+
 /**
  * @returns {Map<string, string>} 模块文件名 → 未加 banner 的源码
  */
@@ -97,7 +121,7 @@ export function generatePythonModels(entries) {
         .sort()
         .map((name) => [
           name,
-          fs.readFileSync(path.join(output, name), "utf8"),
+          useJsonInt(fs.readFileSync(path.join(output, name), "utf8")),
         ]),
     );
   } finally {

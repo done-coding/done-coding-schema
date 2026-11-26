@@ -1,8 +1,23 @@
-"""生成模型的基类（手写，生成器以 --base-class 引用）。"""
+"""生成模型的基类与整数类型（手写，生成器以 --base-class 引用，生成的整数字段用 JsonInt）。"""
 
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Strict, model_validator
+
+
+def _integral_float_to_int(value: Any) -> Any:
+    """值为整数的浮点（JSON 里的 12.0）按 JSON Schema 算整数，归一成 int。"""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
+
+JsonInt = Annotated[int, BeforeValidator(_integral_float_to_int), Strict()]
+"""定义里 type: integer 的字段。
+
+与 JSON Schema 的 integer 一致：接受整数与值为整数的浮点（12.0 → 12）；12.5、
+字符串 "12"、布尔仍拒绝。Strict() 让它在不继承基类配置的 RootModel 里也一样严格。
+"""
 
 
 class SchemaModel(BaseModel):

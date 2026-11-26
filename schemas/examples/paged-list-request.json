@@ -43,6 +43,13 @@
       "data": {
         "orderBy": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       }
+    },
+    {
+      "name": "整数参数写成值为整数的浮点（如 2.0）",
+      "data": {
+        "page": 2.0,
+        "pageSize": 20.0
+      }
     }
   ],
   "invalid": [
@@ -136,6 +143,18 @@
       "name": "pageSize 不是整数",
       "data": {
         "pageSize": "10"
+      },
+      "errors": [
+        {
+          "instancePath": "/pageSize",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pageSize 是布尔",
+      "data": {
+        "pageSize": true
       },
       "errors": [
         {

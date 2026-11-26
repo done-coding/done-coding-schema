@@ -4,13 +4,14 @@
 #   filename:  service-error-codes.json
 
 from __future__ import annotations
-from pydantic import ConfigDict, Field, RootModel, StrictBool, StrictInt, StrictStr
+from pydantic import ConfigDict, Field, RootModel, StrictBool, StrictStr
+from done_coding_schema_api._base import JsonInt
 from typing import Annotated, Literal
 from done_coding_schema_api._base import SchemaModel
 
 
-class AdditionalHttpStatus(RootModel[StrictInt]):
-    root: Annotated[StrictInt, Field(ge=400, le=599)]
+class AdditionalHttpStatus(RootModel[JsonInt]):
+    root: Annotated[JsonInt, Field(ge=400, le=599)]
 
 
 class ServiceErrorCode(SchemaModel):
@@ -35,7 +36,7 @@ class ServiceErrorCode(SchemaModel):
     """
     accept：受理时同步返回；execute：异步执行阶段产生；both：两者都有。
     """
-    httpStatus: Annotated[StrictInt | None, Field(ge=400, le=599)] = None
+    httpStatus: Annotated[JsonInt | None, Field(ge=400, le=599)] = None
     """
     主 HTTP 状态，4xx 或 5xx。
     """

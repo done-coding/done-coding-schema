@@ -4,7 +4,8 @@
 #   filename:  cursor-list-request.json
 
 from __future__ import annotations
-from pydantic import ConfigDict, Field, StrictInt, StrictStr
+from pydantic import ConfigDict, Field, StrictStr
+from done_coding_schema_api._base import JsonInt
 from typing import Annotated
 from done_coding_schema_api._base import SchemaModel
 
@@ -21,7 +22,7 @@ class CursorListRequest(SchemaModel):
     """
     上一批返回的 next，1–1024 个字符；首批不带。
     """
-    limit: Annotated[StrictInt | None, Field(ge=1, le=100)] = None
+    limit: Annotated[JsonInt | None, Field(ge=1, le=100)] = None
     """
     本批最多取多少条；缺省值由各接口自定。
     """

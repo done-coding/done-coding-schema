@@ -9,6 +9,8 @@ from done_coding_schema_api import (
     PAGED_LIST_RESPONSE_PATHS,
     ErrorBody,
     PagedList,
+    PagedListRequest,
+    ServiceErrorCodes,
     SuccessEnvelope,
 )
 
@@ -83,3 +85,36 @@ def test_constants() -> None:
     assert COMMON_ERROR_CODE_TABLE["RATE_LIMITED"]["retryable"] is True
     with pytest.raises(TypeError):
         PAGED_LIST_REQUEST_PARAMS["pageSize"] = "x"  # type: ignore[index]
+
+
+def test_integral_float_becomes_int() -> None:
+    # JSON Schema 的 integer 接受 12.0；校验后归一成 int，输出也是整数。
+    page = PagedList.model_validate_json(
+        '{"items": [], "page": {"totalRecord": 0.0, "pageSize": 10.0, "totalPage": 0}}'
+    ).page
+    assert (page.totalRecord, page.pageSize) == (0, 10)
+    assert type(page.pageSize) is int
+    codes = ServiceErrorCodes.model_validate(
+        {
+            "service": "order",
+            "codes": [
+                {
+                    "code": "ORDER_LOCKED",
+                    "stage": "both",
+                    "httpStatus": 409.0,
+                    "additionalHttpStatuses": [423.0],
+                    "retryable": False,
+                    "outcome": "not_executed",
+                    "meaning": "订单已锁定",
+                }
+            ],
+        }
+    )
+    assert codes.model_dump()["codes"][0]["additionalHttpStatuses"] == [423]
+    assert type(codes.codes[0].httpStatus) is int
+
+
+@pytest.mark.parametrize("value", [12.5, "12", True, float("inf"), float("nan")])
+def test_non_integers_are_still_rejected(value: object) -> None:
+    with pytest.raises(ValidationError):
+        PagedListRequest.model_validate({"pageSize": value})

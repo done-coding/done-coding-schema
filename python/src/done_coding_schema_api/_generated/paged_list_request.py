@@ -4,7 +4,8 @@
 #   filename:  paged-list-request.json
 
 from __future__ import annotations
-from pydantic import ConfigDict, Field, StrictInt, StrictStr
+from pydantic import ConfigDict, Field, StrictStr
+from done_coding_schema_api._base import JsonInt
 from typing import Annotated
 from done_coding_schema_api._base import SchemaModel
 
@@ -17,11 +18,11 @@ class PagedListRequest(SchemaModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    page: Annotated[StrictInt | None, Field(ge=1)] = 1
+    page: Annotated[JsonInt | None, Field(ge=1)] = 1
     """
     页码，从 1 开始。
     """
-    pageSize: Annotated[StrictInt | None, Field(ge=1, le=100)] = 10
+    pageSize: Annotated[JsonInt | None, Field(ge=1, le=100)] = 10
     """
     每页条数。
     """
