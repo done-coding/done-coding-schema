@@ -2,7 +2,42 @@
 
 from typing import Annotated, Any
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Strict, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Strict,
+    ValidationError,
+    model_validator,
+)
+from pydantic_core import InitErrorDetails, PydanticCustomError
+
+Loc = tuple[str | int, ...]
+
+
+class ConstraintErrors:
+    """收集手写校验发现的出错项，一次抛出；每项的位置指到具体字段。
+
+    在校验器里抛出的 ValidationError 原样上传，外层模型会在位置前加上自己的路径，
+    如嵌在成功外壳里的页码式列表报 ("data", "page", "totalPage")。
+    """
+
+    def __init__(self, title: str) -> None:
+        self._title = title
+        self._errors: list[InitErrorDetails] = []
+
+    def add(self, loc: Loc, error_type: str, message: str, value: Any) -> None:
+        self._errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(error_type, message),
+                loc=loc,
+                input=value,
+            )
+        )
+
+    def raise_if_any(self) -> None:
+        if self._errors:
+            raise ValidationError.from_exception_data(self._title, self._errors)
 
 
 def _integral_float_to_int(value: Any) -> Any:
@@ -46,10 +81,17 @@ class SchemaModel(BaseModel):
         生成工具把可选字段写成 `X | None = None`，会放过显式 null；这里补上。
         """
         if isinstance(data, dict):
+            errors = ConstraintErrors(cls.__name__)
             for name, field in cls.model_fields.items():
                 if field.is_required():
                     continue
-                for key in {name, field.alias or name}:
+                for key in sorted({name, field.alias or name}):
                     if key in data and data[key] is None:
-                        raise ValueError(f"{key} 不能为 null；不需要时省略该字段")
+                        errors.add(
+                            (key,),
+                            "null_forbidden",
+                            "不能为 null；不需要时省略该字段",
+                            None,
+                        )
+            errors.raise_if_any()
         return data

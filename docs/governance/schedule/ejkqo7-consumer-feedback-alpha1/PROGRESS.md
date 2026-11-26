@@ -19,7 +19,7 @@ after: ""
 |---|---|---|---|
 | ⓒ | 整数字段接受值为整数的浮点 | 完成 | 见进度记录 |
 | ⓓ | 页码式列表条数约束 | 进行中 | |
-| ⓔ | 校验器报错位置指到具体字段 | 待做 | |
+| ⓔ | 校验器报错位置指到具体字段 | 完成 | 见进度记录 |
 | ⓐ | Python 包带定义文件与取用函数 | 待做 | |
 | ⓑ | 模型导出的 JSON Schema 为源定义 | 待做 | |
 | ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 待做 | |
@@ -41,3 +41,16 @@ after: ""
   - 样例：原来 23 个「与码表不符」的反例改为合法例，名字改成「覆盖码表缺省值」。其中 SERVICE_UNAVAILABLE 两例就是下发方要的「outcome 覆盖为 not_executed」和「retryable 覆盖为 false」。`GENERATED_GAPS` 去掉对应的 23 条。
   - 码表已没有约束，写不出反例，`check-examples.mjs` 改为只对含约束的定义要求有不合法样例。约束总数从 179 条降到 157 条，全部有反例覆盖。
   - README 业务码一节改为缺省值的说法，并写了覆盖的例子与 `default_error_detail`。
+- 2026-11-26 ⓔ 报错位置：
+  - `_base.ConstraintErrors` 收集出错项，用 `ValidationError.from_exception_data` 一次抛出，每项带 loc。外层模型会在前面补上自己的路径，pydantic 2.14 下实测成立，2.11 在发布前构建时验证。
+  - 各手写校验改为逐项报告，不再碰到第一处就停。位置如下：
+    - totalPage 报 `("page","totalPage")`。
+    - 不得出现的 page / cursor 指到该字段本身。
+    - hasMore 时缺 next 报 `("cursor","next")`。
+    - 错误体 code 为 OK 报 `("code",)`。
+    - fields 项的 pointer / parameter 指到 `("error","fields",i,"pointer"|"parameter")`。
+    - 空筛选条件指到 `(字段名,)`。
+    - 专有码清单的各项指到 `("codes",i,"code"|"httpStatus"|"additionalHttpStatuses")`。
+    - 可选字段显式 null 指到该字段。
+  - 错误类型（自定）：`field_forbidden`、`field_required`、`null_forbidden`、`total_page_mismatch`、`code_reserved`、`duplicate_value`、`array_contains_property`、`condition_empty`。
+  - 新增 `tests/test_error_locations.py`，12 组用例逐项核对位置集合。
