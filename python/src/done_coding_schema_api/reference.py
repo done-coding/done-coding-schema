@@ -5,7 +5,7 @@
 显式引入、显式写进自己的代码。常量由仓根 ``schemas/`` 的定义生成。
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import NamedTuple
 
 from ._definitions import (
@@ -50,15 +50,17 @@ class ReservedCodeHit(NamedTuple):
 
 
 def find_reserved_codes(
-    codes: ServiceErrorCodes, reserved: Iterable[str]
+    codes: ServiceErrorCodes, reserved: Iterable[str] | Mapping[str, str]
 ) -> list[ReservedCodeHit]:
-    """找出专有码清单里与 reserved 重名的项。
+    """找出专有码清单里与 reserved 中的码重名的项。
 
     结构本身只把 OK 与 HTTP_<数字> 当保留字；要让专有码避开某组通用码（如本模块的
-    ``COMMON_ERROR_CODES``，或自己的一组），把那组码传进来。按字节比较，不做大小写归一；
+    ``COMMON_ERROR_CODES``，或自己的一组），把那组码传进来：字符串的可迭代集合，
+    或「名字 → 码」的映射（取值，不取键）。按字节比较，不做大小写归一；
     reserved 为空就什么也不比。返回空列表即没有撞码。
     """
-    reserved_set = set(reserved)
+    values = reserved.values() if isinstance(reserved, Mapping) else reserved
+    reserved_set = set(values)
     return [
         ReservedCodeHit(index, item.code)
         for index, item in enumerate(codes.codes)

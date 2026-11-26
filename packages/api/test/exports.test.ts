@@ -120,29 +120,46 @@ describe("包的运行时导出", () => {
   });
 });
 
-describe("findReservedCodes：专有码显式避开某组码", () => {
+describe("findReservedCodes：专有码显式避开某组码，比对的是码的值", () => {
+  // 与 Python 的 tests/test_exports.py 同一组数据，两种语言结论须相同。
   const list = {
     codes: [
       { code: "ORDER_LOCKED" },
       { code: "NOT_FOUND" },
       { code: "not_found" },
       { code: "QUOTA_USED_UP" },
+      { code: "MISSING" },
     ],
   } as unknown as Parameters<typeof findReservedCodes>[0];
 
   it("不传保留码就不比", () => {
     expect(findReservedCodes(list, [])).toEqual([]);
+    expect(findReservedCodes(list, {})).toEqual([]);
   });
 
-  it("传入包里的通用码：按字节比较，指出撞码的位置", () => {
+  it("传入包里的通用码（对象，取值）：按字节比较，指出撞码的位置", () => {
+    expect(findReservedCodes(list, COMMON_ERROR_CODES)).toEqual([
+      { index: 1, code: "NOT_FOUND" },
+    ]);
     expect(findReservedCodes(list, Object.values(COMMON_ERROR_CODES))).toEqual([
       { index: 1, code: "NOT_FOUND" },
     ]);
   });
 
-  it("传入自己的一组码（引用包的一组再加自己的）", () => {
-    const own = { ...COMMON_ERROR_CODES, QUOTA_USED_UP: "QUOTA_USED_UP" };
-    expect(findReservedCodes(list, Object.values(own))).toEqual([
+  it("键与值不同的集合：比对值，不比对键", () => {
+    const own = { MISSING: "NOT_FOUND", QUOTA: "QUOTA_USED_UP" };
+    expect(findReservedCodes(list, own)).toEqual([
+      { index: 1, code: "NOT_FOUND" },
+      { index: 3, code: "QUOTA_USED_UP" },
+    ]);
+    expect(findReservedCodes(list, new Set(["MISSING"]))).toEqual([
+      { index: 4, code: "MISSING" },
+    ]);
+  });
+
+  it("自己的一组码（引用包的一组再加自己的）", () => {
+    const ours = { ...COMMON_ERROR_CODES, QUOTA_USED_UP: "QUOTA_USED_UP" };
+    expect(findReservedCodes(list, ours)).toEqual([
       { index: 1, code: "NOT_FOUND" },
       { index: 3, code: "QUOTA_USED_UP" },
     ]);

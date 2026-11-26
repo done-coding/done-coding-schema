@@ -10,6 +10,8 @@ from done_coding_schema_api.reference import (
     find_reserved_codes,
 )
 
+STRUCTURE_ADDITIONS = {"JsonInt"}
+
 REFERENCE_NAMES = {
     "COMMON_ERROR_CODES",
     "CommonErrorCode",
@@ -34,6 +36,7 @@ def test_top_level_exports_no_reference_resource() -> None:
     assert REFERENCE_NAMES.isdisjoint(package.__all__)
     for name in REFERENCE_NAMES:
         assert not hasattr(package, name), name
+    assert STRUCTURE_ADDITIONS <= set(package.__all__)
     # 旧名不留转发别名。
     assert not hasattr(package, "default_error_detail")
     assert not hasattr(reference, "default_error_detail")
@@ -62,14 +65,19 @@ CODE = {
     "outcome": "not_executed",
     "meaning": "订单已锁定",
 }
+# 与 TS 的 packages/api/test/exports.test.ts 同一组数据，两种语言结论须相同。
 CODES = ServiceErrorCodes.model_validate(
     {
         "service": "order",
         "codes": [
-            {**CODE, "code": "ORDER_LOCKED"},
-            {**CODE, "code": "NOT_FOUND"},
-            {**CODE, "code": "not_found"},
-            {**CODE, "code": "QUOTA_USED_UP"},
+            {**CODE, "code": code}
+            for code in (
+                "ORDER_LOCKED",
+                "NOT_FOUND",
+                "not_found",
+                "QUOTA_USED_UP",
+                "MISSING",
+            )
         ],
     }
 )
@@ -81,11 +89,24 @@ def test_structure_accepts_common_code_as_service_code() -> None:
 
 def test_find_reserved_codes_compares_only_what_is_passed() -> None:
     assert find_reserved_codes(CODES, []) == []
-    assert find_reserved_codes(CODES, COMMON_ERROR_CODES) == [
-        ReservedCodeHit(1, "NOT_FOUND")
-    ]
-    own = {**COMMON_ERROR_CODES, "QUOTA_USED_UP": "QUOTA_USED_UP"}
+    assert find_reserved_codes(CODES, {}) == []
+    expected = [ReservedCodeHit(1, "NOT_FOUND")]
+    assert find_reserved_codes(CODES, COMMON_ERROR_CODES) == expected
+    assert find_reserved_codes(CODES, list(COMMON_ERROR_CODES.values())) == expected
+
+
+def test_find_reserved_codes_compares_values_not_keys() -> None:
+    own = {"MISSING": "NOT_FOUND", "QUOTA": "QUOTA_USED_UP"}
     assert find_reserved_codes(CODES, own) == [
+        ReservedCodeHit(1, "NOT_FOUND"),
+        ReservedCodeHit(3, "QUOTA_USED_UP"),
+    ]
+    assert find_reserved_codes(CODES, {"MISSING"}) == [ReservedCodeHit(4, "MISSING")]
+
+
+def test_find_reserved_codes_with_own_common_codes() -> None:
+    ours = {**COMMON_ERROR_CODES, "QUOTA_USED_UP": "QUOTA_USED_UP"}
+    assert find_reserved_codes(CODES, ours) == [
         ReservedCodeHit(1, "NOT_FOUND"),
         ReservedCodeHit(3, "QUOTA_USED_UP"),
     ]
