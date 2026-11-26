@@ -13,16 +13,31 @@ from typing import Annotated, Any, Literal
 import pytest
 from fastapi import FastAPI, Query
 from jsonschema import Draft202012Validator
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_validator,
+)
+from pydantic.alias_generators import to_snake
 
 from done_coding_schema_api import (
+    CursorListCursor,
+    CursorListRequest,
     ErrorBody,
+    ErrorField,
     JsonInt,
     PagedList,
+    PagedListPage,
     PagedListRequest,
     ServiceErrorCode,
 )
-from done_coding_schema_api.reference import PAGED_LIST_REQUEST_PARAMS
+from done_coding_schema_api.reference import (
+    CURSOR_LIST_REQUEST_PARAMS,
+    PAGED_LIST_REQUEST_PARAMS,
+)
 
 
 class User(BaseModel):
@@ -101,6 +116,26 @@ class OrderPageQuery(OrderPageRequest):
         return data
 
 
+class OrderCursorQuery(CursorListRequest):
+    """游标式的线上查询参数：cursor.after、cursor.limit；limit 上限 50。"""
+
+    model_config = ConfigDict(
+        alias_generator=lambda name: CURSOR_LIST_REQUEST_PARAMS[name],
+        validate_by_name=False,
+    )
+
+    limit: JsonInt = Field(default=20, le=50)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _decode_limit(cls, data: Any) -> Any:
+        key = CURSOR_LIST_REQUEST_PARAMS["limit"]
+        value = data.get(key) if isinstance(data, dict) else None
+        if isinstance(value, str) and re.fullmatch("[0-9]+", value):
+            return {**data, key: int(value)}
+        return data
+
+
 ERROR = {
     "code": "ORDER_LOCKED",
     "message": "订单已锁定",
@@ -139,6 +174,16 @@ CASES: list[tuple[type[BaseModel], list[Any]]] = [
         OrderPageQuery,
         [{"page.pageSize": v} for v in (0, 1, 20, 50, 51)]
         + [{"pageSize": 20}, {"page.page": 2, "page.query": "甲"}, {"page.limit": 1}],
+    ),
+    (
+        OrderCursorQuery,
+        [{"cursor.limit": v} for v in (0, 1, 50, 51)]
+        + [
+            {"cursor.after": "x"},
+            {"cursor.after": ""},
+            {"limit": 20},
+            {"cursor.before": "x"},
+        ],
     ),
 ]
 
@@ -305,3 +350,90 @@ def test_fastapi_query_model_uses_wire_parameter_names() -> None:
         "pageSize=20",
     ):
         assert asyncio.run(_get(app, "/orders", bad))[0] == 422, bad
+
+
+def test_cursor_query_model_uses_wire_parameter_names() -> None:
+    exported = OrderCursorQuery.model_json_schema()
+    assert list(exported["properties"]) == ["cursor.after", "cursor.limit"]
+    assert exported["properties"]["cursor.limit"]["minimum"] == 1
+    assert exported["properties"]["cursor.limit"]["maximum"] == 50
+
+    app = FastAPI()
+
+    @app.get("/events")
+    def list_events(params: Annotated[OrderCursorQuery, Query()]) -> dict[str, Any]:
+        return params.model_dump(exclude_none=True)
+
+    parameters = app.openapi()["paths"]["/events"]["get"]["parameters"]
+    assert [p["name"] for p in parameters] == ["cursor.after", "cursor.limit"]
+    ok = asyncio.run(_get(app, "/events", "cursor.after=abc&cursor.limit=30"))
+    assert ok == (200, {"cursor.after": "abc", "cursor.limit": 30})
+    for bad in ("cursor.limit=0", "cursor.limit=51", "cursor.after=", "limit=20"):
+        assert asyncio.run(_get(app, "/events", bad))[0] == 422, bad
+
+
+# ---- 包体结构不能改线上字段名 ----
+
+# 定义里按名字引用字段的四个结构，各一种改名写法；另加关掉 serialize_by_alias 一例。
+RENAMES: list[tuple[str, type[BaseModel], dict[str, Any], str]] = [
+    (
+        "ErrorField 的 in 设 alias（if/then/else 按名引用 in、pointer、parameter）",
+        ErrorField,
+        {"__annotations__": {"in_": str}, "in_": Field(alias="location")},
+        "in_",
+    ),
+    (
+        "ErrorField 关掉 serialize_by_alias（输出会变成 in_）",
+        ErrorField,
+        {"model_config": ConfigDict(serialize_by_alias=False)},
+        "in_",
+    ),
+    (
+        "ServiceErrorCode 的 httpStatus 设 serialization_alias（x-arrayExcludesProperty 按名引用）",
+        ServiceErrorCode,
+        {
+            "__annotations__": {"httpStatus": JsonInt | None},
+            "httpStatus": Field(default=None, serialization_alias="status"),
+        },
+        "httpStatus",
+    ),
+    (
+        "PagedListPage 用 alias_generator（x-totalPageEqualsCeil 按名引用）",
+        PagedListPage,
+        {"model_config": ConfigDict(alias_generator=to_snake)},
+        "totalRecord",
+    ),
+    (
+        "CursorListCursor 的 hasMore 设 validation_alias（if/then 按名引用 hasMore、next）",
+        CursorListCursor,
+        {
+            "__annotations__": {"hasMore": bool},
+            "hasMore": Field(validation_alias=AliasChoices("hasMore", "has_more")),
+        },
+        "hasMore",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("base", "namespace", "field"),
+    [case[1:] for case in RENAMES],
+    ids=[case[0] for case in RENAMES],
+)
+def test_body_structure_subclass_cannot_rename_fields(
+    base: type[BaseModel], namespace: dict[str, Any], field: str
+) -> None:
+    with pytest.raises(TypeError, match=f"不能改线上字段名：.*{field}"):
+        type("Renamed", (base,), dict(namespace))
+
+
+def test_unrenamed_subclasses_are_still_allowed() -> None:
+    # 收紧、加默认、继承参数化泛型都不改线上名。
+    class Narrow(ServiceErrorCode):
+        meaning: str = Field(max_length=20)
+
+    class Page(PagedList[User]):
+        pass
+
+    assert Narrow.model_fields["meaning"].alias is None
+    assert Page.model_json_schema()["properties"]["page"]["x-totalPageEqualsCeil"]

@@ -74,6 +74,59 @@ def _redeclared(model: type[BaseModel]) -> dict[str, FieldInfo]:
     }
 
 
+# ---- 线上字段名：只有查询参数模型可以改 ----
+
+
+def _wire_names(model: type[BaseModel], name: str) -> tuple[str, str]:
+    """字段实际的线上名：(校验时认的名字, 输出时用的名字)。"""
+    field = model.__pydantic_fields__[name]
+    config = model.model_config
+    validation: Any = name
+    if config.get("validate_by_alias", True):
+        alias = (
+            field.validation_alias
+            if field.validation_alias is not None
+            else field.alias
+        )
+        validation = alias if alias is not None else name
+    serialization = name
+    if config.get("serialize_by_alias", False):
+        serialization = field.serialization_alias or field.alias or name
+    # validation_alias 可以是 AliasPath / AliasChoices，按 repr 比较。
+    return repr(validation), serialization
+
+
+def check_wire_names(model: type[BaseModel]) -> None:
+    """包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）的子类不得改线上字段名。
+
+    定义里有按名字引用字段的地方（if/then/else、x- 检查关键字），改了名，导出的结构
+    与运行时校验就对不上；线上字段名本身也是这个包要统一的东西。只有带 x-paramPrefix 的
+    查询参数模型（页码式与游标式请求参数）可以改，用来加上 page.、cursor. 这类前缀。
+    alias、validation_alias、serialization_alias、alias_generator，以及关掉
+    validate_by_alias / serialize_by_alias，凡让线上名变了的都算改名，在类定义时报错。
+    """
+    generated_class = _generated_class(model)
+    if generated_class is None or generated_class is model:
+        return
+    if bundled_schema(*source_of(generated_class.__name__)).get("x-paramPrefix"):  # type: ignore[misc]
+        return
+    renamed = [
+        name
+        for name in generated_class.__pydantic_fields__
+        if name in model.__pydantic_fields__
+        and _wire_names(model, name) != _wire_names(generated_class, name)
+    ]
+    if renamed:
+        details = "、".join(
+            f"{name}（定义里是 {_wire_names(generated_class, name)[1]!r}）"
+            for name in renamed
+        )
+        raise TypeError(
+            f"{model.__name__}：{generated_class.__name__} 是包体结构，子类不能改线上字段名：{details}。"
+            "只有查询参数模型（PagedListRequest、CursorListRequest）可以按前缀改名。"
+        )
+
+
 # ---- 运行时：重新声明的字段仍要满足源定义 ----
 
 _ADAPTERS: "WeakKeyDictionary[type[BaseModel], dict[str, TypeAdapter[Any]]]" = (
