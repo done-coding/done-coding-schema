@@ -166,7 +166,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 包里的码和数值都不会自己生效。要用，就在自己的代码里写出来：引用包里的参考值，或写自己的值。
 
-**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。
+**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）不能改线上字段名，设了别名的子类在定义时就报错；只有查询参数模型（`PagedListRequest`、`CursorListRequest`）可以按前缀改名，见下面「用作查询参数」。
 
 ```python
 from pydantic import Field
@@ -189,7 +189,7 @@ class AuditPageRequest(PagedListRequest):
 
 `OrderPageRequest.model_json_schema()`，以及 FastAPI 用它作请求体或返回类型时生成的 OpenAPI，导出的是定义与子类声明的交集：`pageSize` 带上 `default: 20`、`maximum: 50`，定义里的说明与 `minimum: 1` 保留。运行时的校验与导出的结构结论相同：导出写着的约束都会执行。
 
-**用作查询参数**（FastAPI）：线上参数名要用定义规定的 `page.page`、`page.pageSize`、`page.query`、`page.orderBy`（即 `PAGED_LIST_REQUEST_PARAMS`），不是字段名。查询参数都是字符串，整数参数要先解码再按定义校验：
+**用作查询参数**（FastAPI）：线上参数名要用定义规定的 `page.page`、`page.pageSize`、`page.query`、`page.orderBy`（即 `PAGED_LIST_REQUEST_PARAMS`），不是字段名；游标式同理用 `CURSOR_LIST_REQUEST_PARAMS`（`cursor.after`、`cursor.limit`）。查询参数都是字符串，整数参数要先解码再按定义校验：
 
 ```python
 import re
@@ -384,7 +384,7 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 
 **校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。
 
-**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型、改线上字段名）时，导出的是定义与子类声明的交集，运行时同样两者都检查，见「使用方怎样显式声明自己的配置」。
+**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型；查询参数模型还可以按前缀改线上名）时，导出的是定义与子类声明的交集，运行时同样两者都检查，见「使用方怎样显式声明自己的配置」。
 
 **定义文件**：包里带着与 npm 包同一批的定义文件，可以交给任何 JSON Schema 校验器。结构定义从包顶层取，参考资源定义从 `reference` 子模块取：
 
