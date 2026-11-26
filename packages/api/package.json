@@ -1,6 +1,6 @@
 {
   "name": "@done-coding/schema-api",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "description": "跨前后端通用接口结构的类型、常量与定义文件",
   "private": false,
   "main": "lib/index.cjs",
@@ -50,16 +50,14 @@
     "@done-coding/cli-inject": "^0.6.6",
     "@done-coding/cli-publish": "^0.8.6",
     "@types/node": "^18.0.0",
+    "@vitest/coverage-istanbul": "^1.6.1",
     "conventional-changelog": "^5.1.0",
     "conventional-changelog-cli": "^4.1.0",
-    "@vitest/coverage-istanbul": "^1.6.1",
     "typescript": "^5.8.3",
     "vite": "^5.0.10",
     "vite-plugin-dts": "^3.7.0",
     "vitest": "^1.6.1"
   },
-  "peerDependencies": {},
-  "dependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }
