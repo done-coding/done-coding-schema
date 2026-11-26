@@ -96,35 +96,61 @@ def _wire_names(model: type[BaseModel], name: str) -> tuple[str, str]:
     return repr(validation), serialization
 
 
-def check_wire_names(model: type[BaseModel]) -> None:
-    """包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）的子类不得改线上字段名。
+def _allowed_wire_names(
+    generated_class: type[BaseModel], name: str, prefix: str | None
+) -> set[tuple[str, str]]:
+    """一个字段允许的线上名：定义里的原名；查询参数模型另可用「前缀.原名」。"""
+    original = _wire_names(generated_class, name)
+    if not prefix:
+        return {original}
+    wire = f"{prefix}.{original[1]}"
+    candidates = {original[1], wire}
+    return {(repr(v), s) for v in candidates for s in candidates}
 
-    定义里有按名字引用字段的地方（if/then/else、x- 检查关键字），改了名，导出的结构
-    与运行时校验就对不上；线上字段名本身也是这个包要统一的东西。只有带 x-paramPrefix 的
-    查询参数模型（页码式与游标式请求参数）可以改，用来加上 page.、cursor. 这类前缀。
+
+def check_wire_names(model: type[BaseModel]) -> None:
+    """子类不得随意改线上字段名，在类定义时报错。
+
+    - 包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）：一律不得改。定义里有
+      按名字引用字段的地方（if/then/else、x- 检查关键字），改了名，导出的结构与运行时校验
+      就对不上；线上字段名本身也是这个包要统一的东西。
+    - 查询参数模型（带 x-paramPrefix 的页码式与游标式请求参数）：线上名只能是定义里的原名，
+      或「前缀.原名」（如 page.pageSize，即 PAGED_LIST_REQUEST_PARAMS 里的值）。
+
     alias、validation_alias、serialization_alias、alias_generator，以及关掉
-    validate_by_alias / serialize_by_alias，凡让线上名变了的都算改名，在类定义时报错。
+    validate_by_alias / serialize_by_alias，凡让线上名变了的都按上面的规则核对。
+    用校验器或序列化器自己改键名的写法不在检查之内，导出也不会反映。
     """
     generated_class = _generated_class(model)
     if generated_class is None or generated_class is model:
         return
-    if bundled_schema(*source_of(generated_class.__name__)).get("x-paramPrefix"):  # type: ignore[misc]
-        return
+    prefix = bundled_schema(*source_of(generated_class.__name__)).get(  # type: ignore[misc]
+        "x-paramPrefix"
+    )
     renamed = [
         name
         for name in generated_class.__pydantic_fields__
         if name in model.__pydantic_fields__
-        and _wire_names(model, name) != _wire_names(generated_class, name)
+        and _wire_names(model, name)
+        not in _allowed_wire_names(generated_class, name, prefix)
     ]
-    if renamed:
+    if not renamed:
+        return
+    original = {name: _wire_names(generated_class, name)[1] for name in renamed}
+    if prefix:
         details = "、".join(
-            f"{name}（定义里是 {_wire_names(generated_class, name)[1]!r}）"
+            f"{name}（只能是 {original[name]!r} 或 {prefix + '.' + original[name]!r}）"
             for name in renamed
         )
         raise TypeError(
-            f"{model.__name__}：{generated_class.__name__} 是包体结构，子类不能改线上字段名：{details}。"
-            "只有查询参数模型（PagedListRequest、CursorListRequest）可以按前缀改名。"
+            f"{model.__name__}：{generated_class.__name__} 是查询参数模型，"
+            f"子类只能按前缀 {prefix}. 改线上字段名：{details}。"
         )
+    details = "、".join(f"{name}（定义里是 {original[name]!r}）" for name in renamed)
+    raise TypeError(
+        f"{model.__name__}：{generated_class.__name__} 是包体结构，子类不能改线上字段名：{details}。"
+        "只有查询参数模型（PagedListRequest、CursorListRequest）可以按前缀改名。"
+    )
 
 
 # ---- 运行时：重新声明的字段仍要满足源定义 ----

@@ -415,6 +415,55 @@ RENAMES: list[tuple[str, type[BaseModel], dict[str, Any], str]] = [
 ]
 
 
+# 查询参数模型只能按前缀改名，其他改名同样在类定义时被拒。
+QUERY_RENAMES: list[tuple[str, type[BaseModel], dict[str, Any], str]] = [
+    (
+        "PagedListRequest 的 pageSize 改成 size",
+        PagedListRequest,
+        {
+            "__annotations__": {"pageSize": JsonInt | None},
+            "pageSize": Field(default=None, alias="size"),
+        },
+        "pageSize",
+    ),
+    (
+        "CursorListRequest 用 alias_generator=str.upper",
+        CursorListRequest,
+        {"model_config": ConfigDict(alias_generator=str.upper)},
+        "after",
+    ),
+    (
+        "PagedListRequest 用了别的前缀 p.",
+        PagedListRequest,
+        {"model_config": ConfigDict(alias_generator=lambda name: f"p.{name}")},
+        "page",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("base", "namespace", "field"),
+    [case[1:] for case in QUERY_RENAMES],
+    ids=[case[0] for case in QUERY_RENAMES],
+)
+def test_query_model_can_only_add_its_prefix(
+    base: type[BaseModel], namespace: dict[str, Any], field: str
+) -> None:
+    with pytest.raises(TypeError, match=f"只能按前缀 .*改线上字段名：.*{field}"):
+        type("Renamed", (base,), dict(namespace))
+
+
+def test_query_model_prefix_renames_are_allowed() -> None:
+    # 按前缀改名（README 的写法）与只给个别字段加前缀都通过。
+    assert OrderPageQuery.model_fields["pageSize"].alias == "page.pageSize"
+    assert OrderCursorQuery.model_fields["limit"].alias == "cursor.limit"
+
+    class OnlyPageSize(PagedListRequest):
+        pageSize: JsonInt | None = Field(default=None, alias="page.pageSize")
+
+    assert OnlyPageSize.model_validate({"page.pageSize": 5}).pageSize == 5
+
+
 @pytest.mark.parametrize(
     ("base", "namespace", "field"),
     [case[1:] for case in RENAMES],
