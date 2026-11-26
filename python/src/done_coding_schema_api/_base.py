@@ -12,6 +12,7 @@ from pydantic import (
     ValidationError,
     model_validator,
 )
+from pydantic.fields import FieldInfo
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, InitErrorDetails, PydanticCustomError
 
@@ -22,42 +23,64 @@ Loc = tuple[str | int, ...]
 _GENERATED_MODULES = f"{__package__}._generated."
 
 
-def source_json_schema(
-    model: type[BaseModel], core_schema: CoreSchema, handler: GetJsonSchemaHandler
-) -> JsonSchemaValue:
-    """模型导出的 JSON Schema = 对应的源定义（展开引用后原样带出，x- 约束一并保留）。
-
-    - 沿继承链找到生成的类，按类名（即定义的 title）定位源定义；找不到则用 pydantic 的默认结果；
-    - 泛型已给类型参数时，``__schema_type_params__`` 列出的字段（items 的元素、data）
-      换成类型参数生成的结构；
-    - 子类另外声明、源定义里没有的字段，按 pydantic 的默认结果补进 properties。
-    """
-    source = next(
+def _generated_class(model: type[BaseModel]) -> type[BaseModel] | None:
+    """继承链上第一个能按类名（即定义的 title）找到源定义的生成类。"""
+    return next(
         (
-            located
+            klass
             for klass in model.__mro__
             if klass.__module__.startswith(_GENERATED_MODULES)
-            and (located := source_of(klass.__name__)) is not None
+            and source_of(klass.__name__) is not None
         ),
         None,
     )
-    if source is None:
+
+
+def _has_type_arguments(model: type[BaseModel]) -> bool:
+    """模型或其父类给了泛型类型参数（PagedList[User]，或 class UserPage(PagedList[User])）。"""
+    return any(
+        getattr(klass, "__pydantic_generic_metadata__", {}).get("args")
+        for klass in model.__mro__
+    )
+
+
+def _field_changed(field: FieldInfo, original: FieldInfo) -> bool:
+    """子类重新声明了字段（改了类型、默认值、约束、说明等任一项）。"""
+    return repr(field) != repr(original)
+
+
+def source_json_schema(
+    model: type[BaseModel], core_schema: CoreSchema, handler: GetJsonSchemaHandler
+) -> JsonSchemaValue:
+    """模型导出的 JSON Schema = 对应的源定义 + 子类的改动。
+
+    - 沿继承链找到生成的类，按类名（即定义的 title）定位源定义，展开引用后原样带出，
+      x- 约束一并保留；找不到则用 pydantic 的默认结果；
+    - 泛型给了类型参数时（直接参数化或继承参数化的类），``__schema_type_params__``
+      列出的字段（items 的元素、data）换成类型参数生成的结构；
+    - 子类重新声明的已有字段（加上限、加默认、收窄类型等）：在源定义的该字段上叠加
+      pydantic 为新声明生成的关键字，源定义的其余约束保留；是否必填按新声明；
+    - 子类另外声明、源定义里没有的字段，按 pydantic 的默认结果补进 properties。
+    """
+    generated_class = _generated_class(model)
+    if generated_class is None:
         return handler(core_schema)
-    schema = bundled_schema(*source)
+    schema = bundled_schema(*source_of(generated_class.__name__))  # type: ignore[misc]
     properties = schema.get("properties", {})
-    typed = (
-        getattr(model, "__schema_type_params__", ())
-        if getattr(model, "__pydantic_generic_metadata__", {}).get("args")
-        else ()
-    )
+    type_params = getattr(model, "__schema_type_params__", ())
+    typed = type_params if _has_type_arguments(model) else ()
     # RootModel 的 root 是整体本身，不是字段。
-    declared = (
-        []
-        if issubclass(model, RootModel)
-        else [field.alias or name for name, field in model.__pydantic_fields__.items()]
-    )
-    extra = [name for name in declared if name not in properties]
-    if not typed and not extra:
+    fields = {} if issubclass(model, RootModel) else model.__pydantic_fields__
+    originals = generated_class.__pydantic_fields__
+    changed: list[str] = []
+    extra: list[str] = []
+    for name, field in fields.items():
+        key = field.alias or name
+        if key not in properties:
+            extra.append(key)
+        elif name not in type_params and _field_changed(field, originals[name]):
+            changed.append(key)
+    if not typed and not changed and not extra:
         return schema
     default = handler.resolve_ref_schema(handler(core_schema))
     generated = default.get("properties", {})
@@ -73,10 +96,18 @@ def source_json_schema(
                 **({"description": description} if description else {}),
                 **generated[name],
             }
-    for name in extra:
-        schema.setdefault("properties", properties)[name] = generated[name]
-        if name in default.get("required", []):
-            schema.setdefault("required", []).append(name)
+    generated_required = set(default.get("required", []))
+    required = [key for key in schema.get("required", []) if key not in changed]
+    for key in changed:
+        overlay = {k: v for k, v in generated[key].items() if k != "title"}
+        properties[key] = {**properties[key], **overlay}
+    for key in extra:
+        schema.setdefault("properties", properties)[key] = generated[key]
+    for key in [*changed, *extra]:
+        if key in generated_required and key not in required:
+            required.append(key)
+    if required or "required" in schema:
+        schema["required"] = required
     return schema
 
 
