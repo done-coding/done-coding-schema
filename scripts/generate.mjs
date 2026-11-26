@@ -5,7 +5,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as prettier from "prettier";
-import { generateConstants } from "./lib/gen-constants.mjs";
+import {
+  REFERENCE,
+  STRUCTURE,
+  generateConstants,
+} from "./lib/gen-constants.mjs";
 import {
   PYTHON_GENERATED_DIR,
   PYTHON_SCHEMA_DIR,
@@ -47,11 +51,19 @@ async function buildOutputs() {
   );
   await add(
     path.join(TS_DIR, "constants.ts"),
-    BANNER + generateConstants(entries),
+    BANNER + generateConstants(entries, STRUCTURE),
+  );
+  await add(
+    path.join(TS_DIR, "reference-constants.ts"),
+    BANNER + generateConstants(entries, REFERENCE),
   );
   await add(
     path.join(TS_DIR, "schemas.ts"),
-    BANNER + generateSchemaModule(entries),
+    BANNER + generateSchemaModule(entries, false),
+  );
+  await add(
+    path.join(TS_DIR, "reference-schemas.ts"),
+    BANNER + generateSchemaModule(entries, true),
   );
   for (const { file, content } of generateSchemaFiles(entries)) {
     await add(path.join(JSON_DIR, file), content);

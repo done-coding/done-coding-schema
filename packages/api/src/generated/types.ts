@@ -21,7 +21,7 @@ export interface CursorListRequest {
    */
   after?: string;
   /**
-   * 本批最多取多少条；缺省值由各接口自定。
+   * 本批最多取多少条，至少 1；不带时取多少条、上限多少由接口自己声明。
    */
   limit?: number;
 }
@@ -52,7 +52,7 @@ export interface CursorListCursor {
 }
 
 /**
- * 错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 的缺省值见通用失败码表，服务能确定更具体的情形时可以覆盖。
+ * 错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。retryable 与 outcome 由服务按实际情形填写，包不替使用方填写；通用失败码表给了一组参考值，使用方可显式引用。
  */
 export interface ErrorBody {
   /**
@@ -144,11 +144,11 @@ export interface ListFilterCondition {
  */
 export interface PagedListRequest {
   /**
-   * 页码，从 1 开始。
+   * 页码，从 1 开始；不带时的含义由接口自己声明。
    */
   page?: number;
   /**
-   * 每页条数。
+   * 每页条数，至少 1；不带时的含义与上限由接口自己声明。
    */
   pageSize?: number;
   /**
@@ -181,7 +181,7 @@ export interface PagedListPage {
    */
   totalRecord: number;
   /**
-   * 每页条数，回显请求值。
+   * 每页条数，回显请求值，至少 1。
    */
   pageSize: number;
   /**
@@ -191,7 +191,7 @@ export interface PagedListPage {
 }
 
 /**
- * 一个服务的专有业务码清单。不得重新定义通用码；OK 与 HTTP_<数字> 形式的码保留，不得使用；比较按字节精确进行，不做大小写归一。
+ * 一个服务的专有业务码清单。OK 与 HTTP_<数字> 形式的码是结构保留字，不得使用；比较按字节精确进行，不做大小写归一。专有码是否要避开某组通用码由使用方显式检查：把那组码传给参考资源出口的检查函数，不传就不比。
  */
 export interface ServiceErrorCodes {
   /**

@@ -108,6 +108,24 @@
           "totalPage": 1
         }
       }
+    },
+    {
+      "name": "pageSize 500（结构不设上限）",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          },
+          {
+            "id": 2
+          }
+        ],
+        "page": {
+          "totalRecord": 21,
+          "pageSize": 500,
+          "totalPage": 1
+        }
+      }
     }
   ],
   "invalid": [
@@ -406,7 +424,7 @@
       ]
     },
     {
-      "name": "pageSize 超过 100",
+      "name": "pageSize 不是整数（12.5）",
       "data": {
         "items": [
           {
@@ -418,14 +436,14 @@
         ],
         "page": {
           "totalRecord": 21,
-          "pageSize": 101,
-          "totalPage": 3
+          "pageSize": 12.5,
+          "totalPage": 2
         }
       },
       "errors": [
         {
           "instancePath": "/page/pageSize",
-          "keyword": "maximum"
+          "keyword": "type"
         }
       ]
     },

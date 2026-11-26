@@ -70,7 +70,7 @@ class ErrorDetail(SchemaModel):
 
 class ErrorBody(SchemaModel):
     """
-    错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 的缺省值见通用失败码表，服务能确定更具体的情形时可以覆盖。
+    错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。retryable 与 outcome 由服务按实际情形填写，包不替使用方填写；通用失败码表给了一组参考值，使用方可显式引用。
     """
 
     model_config = ConfigDict(

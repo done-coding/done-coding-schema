@@ -181,12 +181,44 @@ const describe = (error) =>
   )}`;
 
 /**
- * 合法样例必须有；不合法样例只在定义含约束时要求
- * （不含任何约束的定义，如只给缺省值的通用失败码表，写不出不合法样例）。
+ * 含约束的定义必须有合法与不合法样例。不含任何约束的定义（参考资源，如通用失败码表、
+ * 列表的参考数值）什么都接受，样例证明不了什么，不强制；写了样例照常校验。
  */
 const hasRequiredExamples = (examples, rootUnits) =>
-  Boolean(examples?.valid?.length) &&
-  (rootUnits.size === 0 || Boolean(examples?.invalid?.length));
+  rootUnits.size === 0 ||
+  (Boolean(examples?.valid?.length) && Boolean(examples?.invalid?.length));
+
+/**
+ * 一个不合法样例：须被拒，且拒绝原因恰是预期的那几条。
+ * @returns {{failure?: string, errors?: object[]}} 不符时给 failure，相符时给实际出错项
+ */
+function checkInvalid(file, { name, data, errors: expected }, validate) {
+  if (!expected?.length) {
+    return { failure: `${file} 不合法样例「${name}」没写预期原因` };
+  }
+  if (validate(data)) {
+    return { failure: `${file} 不合法样例「${name}」被接受` };
+  }
+  const actual = validate.errors.filter(
+    (error) => !WRAPPER_KEYWORDS.has(error.keyword),
+  );
+  const remaining = [...actual];
+  const missing = expected.filter((item) => {
+    const index = remaining.findIndex((error) => matches(item, error));
+    if (index === -1) return true;
+    remaining.splice(index, 1);
+    return false;
+  });
+  if (missing.length || remaining.length) {
+    return {
+      failure:
+        `${file} 不合法样例「${name}」拒绝原因不符：\n` +
+        `    预期未出现：${missing.map(describe).join("；") || "无"}\n` +
+        `    多出：${remaining.map(describe).join("；") || "无"}`,
+    };
+  }
+  return { errors: actual };
+}
 
 function main() {
   const entries = loadSchemas();
@@ -217,9 +249,10 @@ function main() {
       failures.push(`${file}：缺少合法或不合法样例`);
       continue;
     }
+    if (!examples) continue;
     const validate = ajv.getSchema(file);
 
-    for (const { name, data } of examples.valid) {
+    for (const { name, data } of examples.valid ?? []) {
       validCount += 1;
       if (!validate(data)) {
         failures.push(
@@ -230,35 +263,14 @@ function main() {
       }
     }
 
-    for (const { name, data, errors: expected } of examples.invalid) {
+    for (const sample of examples.invalid ?? []) {
       invalidCount += 1;
-      if (!expected?.length) {
-        failures.push(`${file} 不合法样例「${name}」没写预期原因`);
+      const { failure, errors } = checkInvalid(file, sample, validate);
+      if (failure) {
+        failures.push(failure);
         continue;
       }
-      if (validate(data)) {
-        failures.push(`${file} 不合法样例「${name}」被接受`);
-        continue;
-      }
-      const actual = validate.errors.filter(
-        (error) => !WRAPPER_KEYWORDS.has(error.keyword),
-      );
-      const remaining = [...actual];
-      const missing = expected.filter((item) => {
-        const index = remaining.findIndex((error) => matches(item, error));
-        if (index === -1) return true;
-        remaining.splice(index, 1);
-        return false;
-      });
-      if (missing.length || remaining.length) {
-        failures.push(
-          `${file} 不合法样例「${name}」拒绝原因不符：\n` +
-            `    预期未出现：${missing.map(describe).join("；") || "无"}\n` +
-            `    多出：${remaining.map(describe).join("；") || "无"}`,
-        );
-        continue;
-      }
-      for (const error of actual) {
+      for (const error of errors) {
         const unit = unitOfError(error, locations, rootUnits);
         if (unit) covered.add(unit);
       }

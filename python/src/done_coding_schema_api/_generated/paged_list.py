@@ -22,9 +22,9 @@ class PagedListPage(SchemaModel):
     """
     总条数。
     """
-    pageSize: Annotated[JsonInt, Field(ge=1, le=100)]
+    pageSize: Annotated[JsonInt, Field(ge=1)]
     """
-    每页条数，回显请求值。
+    每页条数，回显请求值，至少 1。
     """
     totalPage: Annotated[JsonInt, Field(ge=0)]
     """

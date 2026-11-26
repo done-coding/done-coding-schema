@@ -73,7 +73,7 @@
       }
     },
     {
-      "name": "小写形式的保留码与通用码按字节比较不冲突",
+      "name": "小写形式的保留码按字节比较不冲突",
       "data": {
         "service": "a",
         "codes": [
@@ -214,6 +214,22 @@
             "retryable": false,
             "outcome": "not_executed",
             "meaning": "订单已锁定"
+          }
+        ]
+      }
+    },
+    {
+      "name": "专有码清单里出现 NOT_FOUND（结构不比通用码，要避开须显式检查）",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "NOT_FOUND",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
           }
         ]
       }
@@ -885,28 +901,6 @@
         "codes": [
           {
             "code": "HTTP_404",
-            "stage": "accept",
-            "httpStatus": 409,
-            "retryable": false,
-            "outcome": "not_executed",
-            "meaning": "订单已锁定，不能修改"
-          }
-        ]
-      },
-      "errors": [
-        {
-          "instancePath": "/codes/0/code",
-          "keyword": "not"
-        }
-      ]
-    },
-    {
-      "name": "code 重新定义通用码",
-      "data": {
-        "service": "order-service",
-        "codes": [
-          {
-            "code": "NOT_FOUND",
             "stage": "accept",
             "httpStatus": 409,
             "retryable": false,

@@ -18,13 +18,13 @@ class PagedListRequest(SchemaModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    page: Annotated[JsonInt | None, Field(ge=1)] = 1
+    page: Annotated[JsonInt | None, Field(ge=1)] = None
     """
-    页码，从 1 开始。
+    页码，从 1 开始；不带时的含义由接口自己声明。
     """
-    pageSize: Annotated[JsonInt | None, Field(ge=1, le=100)] = 10
+    pageSize: Annotated[JsonInt | None, Field(ge=1)] = None
     """
-    每页条数。
+    每页条数，至少 1；不带时的含义与上限由接口自己声明。
     """
     query: Annotated[StrictStr | None, Field(max_length=200)] = None
     """

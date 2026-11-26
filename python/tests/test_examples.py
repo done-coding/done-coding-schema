@@ -75,7 +75,7 @@ _FIELD_AT = (
     "fields 项的 if/then/else（in 决定 pointer / parameter）→ ErrorBody._semantics"
 )
 _STAGE = "stage 的 if/then/else → ServiceErrorCodes._codes"
-_RESERVED = "保留码与通用码（not）→ ServiceErrorCodes._codes"
+_RESERVED = "结构保留码 OK 与 HTTP_<数字>（not）→ ServiceErrorCodes._codes"
 _CEIL = (
     "x-totalPageEqualsCeil 与 totalRecord 为 0 的 if/then → PagedList._page_consistency"
 )
@@ -108,7 +108,6 @@ GENERATED_GAPS: dict[tuple[str, str], str] = {
     ),
     ("service-error-codes", "code 为保留的 OK"): _RESERVED,
     ("service-error-codes", "code 为保留的 HTTP_<数字>"): _RESERVED,
-    ("service-error-codes", "code 重新定义通用码"): _RESERVED,
     ("service-error-codes", "accept 缺 httpStatus"): _STAGE,
     ("service-error-codes", "both 缺 httpStatus"): _STAGE,
     ("service-error-codes", "execute 带 httpStatus"): _STAGE,

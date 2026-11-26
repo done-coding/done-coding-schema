@@ -122,7 +122,7 @@ CASES: list[tuple[str, type[BaseModel], Any, set[tuple[Any, ...]]]] = [
             "codes": [
                 CODE,
                 {key: value for key, value in CODE.items() if key != "httpStatus"},
-                {**CODE, "code": "NOT_FOUND"},
+                {**CODE, "code": "HTTP_404"},
                 {**CODE, "stage": "execute", "additionalHttpStatuses": [423]},
                 {**CODE, "code": "B", "additionalHttpStatuses": [409, 423, 423]},
             ],

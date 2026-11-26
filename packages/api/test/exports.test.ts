@@ -1,30 +1,87 @@
 import fs from "node:fs";
 import path from "node:path";
+import * as main from "../src";
+import * as reference from "../src/reference";
 import {
   COMMON_ERROR_CODES,
   COMMON_ERROR_CODE_TABLE,
+  CURSOR_LIST_REFERENCE_VALUES,
   LIST_FILTER_PARAMS,
+  PAGED_LIST_REFERENCE_VALUES,
   PAGED_LIST_REQUEST_PARAMS,
-  SUCCESS_CODES,
-  schemas,
-} from "../src";
+  findReservedCodes,
+  referenceSchemas,
+} from "../src/reference";
 
 const jsonDir = path.resolve(__dirname, "../schemas");
+const pkg = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
+);
 
 describe("包的运行时导出", () => {
-  it("导出的定义与包里的 JSON 定义文件一一对应、内容相同", () => {
+  it("结构定义与参考资源定义合起来与包里的 JSON 定义文件一一对应、内容相同", () => {
     const files = fs.readdirSync(jsonDir).sort();
-    expect(Object.keys(schemas).sort()).toEqual(files);
+    const all: Record<string, unknown> = {
+      ...main.schemas,
+      ...referenceSchemas,
+    };
+    expect(Object.keys(all).sort()).toEqual(files);
     for (const file of files) {
       const json = JSON.parse(
         fs.readFileSync(path.join(jsonDir, file), "utf8"),
       );
-      expect(schemas[file as keyof typeof schemas]).toEqual(json);
+      expect(all[file]).toEqual(json);
+      // 参考资源定义带 x-referenceResource 标记，结构定义不带。
+      expect(file in referenceSchemas).toBe(
+        json["x-referenceResource"] === true,
+      );
     }
+    expect(Object.keys(referenceSchemas).sort()).toEqual([
+      "common-error-codes.schema.json",
+      "list-reference-values.schema.json",
+    ]);
+  });
+
+  it("主入口不含任何参考资源：两个出口的导出名不重叠", () => {
+    const mainNames = Object.keys(main);
+    for (const name of Object.keys(reference)) {
+      expect(mainNames).not.toContain(name);
+    }
+    for (const name of [
+      "COMMON_ERROR_CODES",
+      "COMMON_ERROR_CODE_TABLE",
+      "BOUNDED_LIST_RESPONSE_PATHS",
+      "PAGED_LIST_REQUEST_PARAMS",
+      "PAGED_LIST_RESPONSE_PATHS",
+      "CURSOR_LIST_REQUEST_PARAMS",
+      "CURSOR_LIST_RESPONSE_PATHS",
+      "LIST_FILTER_PARAMS",
+      "PAGED_LIST_REFERENCE_VALUES",
+      "CURSOR_LIST_REFERENCE_VALUES",
+      "commonErrorCodesSchema",
+      "listReferenceValuesSchema",
+      "referenceSchemas",
+      "findReservedCodes",
+    ]) {
+      expect(mainNames).not.toContain(name);
+      expect(Object.keys(reference)).toContain(name);
+    }
+    // 结构定义集合里也没有参考资源定义。
+    expect(Object.keys(main.schemas)).not.toContain(
+      "common-error-codes.schema.json",
+    );
+  });
+
+  it("package.json 声明了参考资源子路径，三种产物齐全", () => {
+    expect(pkg.exports["./reference"]).toEqual({
+      types: "./types/reference.d.ts",
+      import: "./es/reference.mjs",
+      require: "./lib/reference.cjs",
+    });
   });
 
   it("成功码与通用失败码分两组，互不包含", () => {
-    expect(SUCCESS_CODES).toEqual({ OK: "OK" });
+    expect(main.SUCCESS_CODES).toEqual({ OK: "OK" });
     expect(Object.values(COMMON_ERROR_CODES)).not.toContain("OK");
   });
 
@@ -40,6 +97,15 @@ describe("包的运行时导出", () => {
     });
   });
 
+  it("参考数值只在参考资源出口", () => {
+    expect(PAGED_LIST_REFERENCE_VALUES).toEqual({
+      page: 1,
+      pageSize: 10,
+      maxPageSize: 100,
+    });
+    expect(CURSOR_LIST_REFERENCE_VALUES).toEqual({ maxLimit: 100 });
+  });
+
   it("请求参数名带各自的前缀", () => {
     expect(Object.values(PAGED_LIST_REQUEST_PARAMS)).toEqual([
       "page.page",
@@ -51,5 +117,34 @@ describe("包的运行时导出", () => {
       prefix: "filter.",
       operators: { eq: "eq" },
     });
+  });
+});
+
+describe("findReservedCodes：专有码显式避开某组码", () => {
+  const list = {
+    codes: [
+      { code: "ORDER_LOCKED" },
+      { code: "NOT_FOUND" },
+      { code: "not_found" },
+      { code: "QUOTA_USED_UP" },
+    ],
+  } as unknown as Parameters<typeof findReservedCodes>[0];
+
+  it("不传保留码就不比", () => {
+    expect(findReservedCodes(list, [])).toEqual([]);
+  });
+
+  it("传入包里的通用码：按字节比较，指出撞码的位置", () => {
+    expect(findReservedCodes(list, Object.values(COMMON_ERROR_CODES))).toEqual([
+      { index: 1, code: "NOT_FOUND" },
+    ]);
+  });
+
+  it("传入自己的一组码（引用包的一组再加自己的）", () => {
+    const own = { ...COMMON_ERROR_CODES, QUOTA_USED_UP: "QUOTA_USED_UP" };
+    expect(findReservedCodes(list, Object.values(own))).toEqual([
+      { index: 1, code: "NOT_FOUND" },
+      { index: 3, code: "QUOTA_USED_UP" },
+    ]);
   });
 });

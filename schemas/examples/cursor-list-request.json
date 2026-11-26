@@ -29,6 +29,12 @@
       "data": {
         "limit": 20.0
       }
+    },
+    {
+      "name": "limit 500（结构不设上限）",
+      "data": {
+        "limit": 500
+      }
     }
   ],
   "invalid": [
@@ -116,18 +122,6 @@
         {
           "instancePath": "/limit",
           "keyword": "minimum"
-        }
-      ]
-    },
-    {
-      "name": "limit 超过 100",
-      "data": {
-        "limit": 101
-      },
-      "errors": [
-        {
-          "instancePath": "/limit",
-          "keyword": "maximum"
         }
       ]
     },

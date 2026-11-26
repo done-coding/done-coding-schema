@@ -4,15 +4,17 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from done_coding_schema_api import (
-    COMMON_ERROR_CODE_TABLE,
-    PAGED_LIST_REQUEST_PARAMS,
-    PAGED_LIST_RESPONSE_PATHS,
     ErrorBody,
     PagedList,
     PagedListRequest,
     ServiceErrorCodes,
     SuccessEnvelope,
-    default_error_detail,
+)
+from done_coding_schema_api.reference import (
+    COMMON_ERROR_CODE_TABLE,
+    PAGED_LIST_REQUEST_PARAMS,
+    PAGED_LIST_RESPONSE_PATHS,
+    reference_error_detail,
 )
 
 
@@ -121,11 +123,11 @@ def test_non_integers_are_still_rejected(value: object) -> None:
         PagedListRequest.model_validate({"pageSize": value})
 
 
-def test_code_table_gives_defaults_that_can_be_overridden() -> None:
-    detail = default_error_detail("SERVICE_UNAVAILABLE")
+def test_code_table_gives_reference_values_used_only_explicitly() -> None:
+    detail = reference_error_detail("SERVICE_UNAVAILABLE")
     assert detail is not None
     assert (detail.retryable, detail.outcome) == (True, "unknown")
-    assert default_error_detail("ORDER_LOCKED") is None
+    assert reference_error_detail("ORDER_LOCKED") is None
     # 服务能确定在执行前就拒绝了：覆盖 outcome 仍是合法错误体。
     body = ErrorBody.model_validate(
         {

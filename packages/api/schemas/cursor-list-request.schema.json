@@ -14,10 +14,9 @@
       "maxLength": 1024
     },
     "limit": {
-      "description": "本批最多取多少条；缺省值由各接口自定。",
+      "description": "本批最多取多少条，至少 1；不带时取多少条、上限多少由接口自己声明。",
       "type": "integer",
-      "minimum": 1,
-      "maximum": 100
+      "minimum": 1
     }
   },
   "additionalProperties": false

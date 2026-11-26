@@ -62,7 +62,7 @@ class ServiceErrorCode(SchemaModel):
 
 class ServiceErrorCodes(SchemaModel):
     """
-    一个服务的专有业务码清单。不得重新定义通用码；OK 与 HTTP_<数字> 形式的码保留，不得使用；比较按字节精确进行，不做大小写归一。
+    一个服务的专有业务码清单。OK 与 HTTP_<数字> 形式的码是结构保留字，不得使用；比较按字节精确进行，不做大小写归一。专有码是否要避开某组通用码由使用方显式检查：把那组码传给参考资源出口的检查函数，不传就不比。
     """
 
     model_config = ConfigDict(

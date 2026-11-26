@@ -23,320 +23,6 @@ export const boundedListSchema: SchemaDocument = {
   },
   required: ["items"],
 };
-/** CommonErrorCodes：common-error-codes.schema.json */
-export const commonErrorCodesSchema: SchemaDocument = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  $id: "common-error-codes.schema.json",
-  title: "CommonErrorCodes",
-  description:
-    "通用失败码表：每个码固定 HTTP 状态（x-httpStatus），并给出能否重试与是否已执行的缺省值（default）。错误体引用本表：code 是通用失败码时，服务未另行指定 error.retryable 与 error.outcome 就取表中值；服务能确定更具体的重试性或执行结局时可以覆盖，任何合法的 retryable 与 outcome 都合法。$defs/code 列出全部通用失败码，须与 allOf 各项一一对应。",
-  $defs: {
-    code: {
-      description: "通用失败码。",
-      enum: [
-        "INVALID_REQUEST",
-        "UNAUTHENTICATED",
-        "FORBIDDEN",
-        "NOT_FOUND",
-        "ROUTE_NOT_FOUND",
-        "METHOD_NOT_ALLOWED",
-        "CONFLICT",
-        "RATE_LIMITED",
-        "INTERNAL_ERROR",
-        "LIST_LIMIT_EXCEEDED",
-        "SERVICE_UNAVAILABLE",
-      ],
-    },
-  },
-  allOf: [
-    {
-      description: "请求不符合接口契约",
-      "x-httpStatus": 400,
-      if: {
-        properties: {
-          code: {
-            const: "INVALID_REQUEST",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "未登录，或令牌无效、过期",
-      "x-httpStatus": 401,
-      if: {
-        properties: {
-          code: {
-            const: "UNAUTHENTICATED",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "已认证但无权执行",
-      "x-httpStatus": 403,
-      if: {
-        properties: {
-          code: {
-            const: "FORBIDDEN",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "资源不存在，或调用方无权得知其存在",
-      "x-httpStatus": 404,
-      if: {
-        properties: {
-          code: {
-            const: "NOT_FOUND",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "接口路径不存在",
-      "x-httpStatus": 404,
-      if: {
-        properties: {
-          code: {
-            const: "ROUTE_NOT_FOUND",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "接口不支持该 HTTP 方法",
-      "x-httpStatus": 405,
-      if: {
-        properties: {
-          code: {
-            const: "METHOD_NOT_ALLOWED",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "资源状态冲突",
-      "x-httpStatus": 409,
-      if: {
-        properties: {
-          code: {
-            const: "CONFLICT",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "请求过于频繁，可稍后重试",
-      "x-httpStatus": 429,
-      if: {
-        properties: {
-          code: {
-            const: "RATE_LIMITED",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: true,
-              },
-              outcome: {
-                default: "not_executed",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "服务内部错误，可能已产生副作用",
-      "x-httpStatus": 500,
-      if: {
-        properties: {
-          code: {
-            const: "INTERNAL_ERROR",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "unknown",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "一次性列表的结果超出接口声明的上限",
-      "x-httpStatus": 500,
-      if: {
-        properties: {
-          code: {
-            const: "LIST_LIMIT_EXCEEDED",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: false,
-              },
-              outcome: {
-                default: "unknown",
-              },
-            },
-          },
-        },
-      },
-    },
-    {
-      description: "服务或其依赖暂不可用",
-      "x-httpStatus": 503,
-      if: {
-        properties: {
-          code: {
-            const: "SERVICE_UNAVAILABLE",
-          },
-        },
-        required: ["code"],
-      },
-      then: {
-        properties: {
-          error: {
-            properties: {
-              retryable: {
-                default: true,
-              },
-              outcome: {
-                default: "unknown",
-              },
-            },
-          },
-        },
-      },
-    },
-  ],
-};
 /** CursorListRequest：cursor-list-request.schema.json */
 export const cursorListRequestSchema: SchemaDocument = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -355,10 +41,10 @@ export const cursorListRequestSchema: SchemaDocument = {
       maxLength: 1024,
     },
     limit: {
-      description: "本批最多取多少条；缺省值由各接口自定。",
+      description:
+        "本批最多取多少条，至少 1；不带时取多少条、上限多少由接口自己声明。",
       type: "integer",
       minimum: 1,
-      maximum: 100,
     },
   },
   additionalProperties: false,
@@ -423,7 +109,7 @@ export const errorBodySchema: SchemaDocument = {
   $id: "error-body.schema.json",
   title: "ErrorBody",
   description:
-    "错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。code 是通用失败码时，retryable 与 outcome 的缺省值见通用失败码表，服务能确定更具体的情形时可以覆盖。",
+    "错误体。HTTP 状态表达大类，包体带业务码、说明、能否重试、是否已执行与出错字段定位。retryable 与 outcome 由服务按实际情形填写，包不替使用方填写；通用失败码表给了一组参考值，使用方可显式引用。",
   type: "object",
   properties: {
     code: {
@@ -460,11 +146,6 @@ export const errorBodySchema: SchemaDocument = {
   },
   required: ["code", "message", "data", "error", "requestId"],
   additionalProperties: false,
-  allOf: [
-    {
-      $ref: "common-error-codes.schema.json",
-    },
-  ],
   $defs: {
     errorDetail: {
       title: "ErrorDetail",
@@ -595,17 +276,14 @@ export const pagedListRequestSchema: SchemaDocument = {
   type: "object",
   properties: {
     page: {
-      description: "页码，从 1 开始。",
+      description: "页码，从 1 开始；不带时的含义由接口自己声明。",
       type: "integer",
       minimum: 1,
-      default: 1,
     },
     pageSize: {
-      description: "每页条数。",
+      description: "每页条数，至少 1；不带时的含义与上限由接口自己声明。",
       type: "integer",
       minimum: 1,
-      maximum: 100,
-      default: 10,
     },
     query: {
       description: "模糊搜索词，最多 200 个字符。",
@@ -657,10 +335,9 @@ export const pagedListSchema: SchemaDocument = {
           minimum: 0,
         },
         pageSize: {
-          description: "每页条数，回显请求值。",
+          description: "每页条数，回显请求值，至少 1。",
           type: "integer",
           minimum: 1,
-          maximum: 100,
         },
         totalPage: {
           description: "总页数。",
@@ -695,7 +372,7 @@ export const serviceErrorCodesSchema: SchemaDocument = {
   $id: "service-error-codes.schema.json",
   title: "ServiceErrorCodes",
   description:
-    "一个服务的专有业务码清单。不得重新定义通用码；OK 与 HTTP_<数字> 形式的码保留，不得使用；比较按字节精确进行，不做大小写归一。",
+    "一个服务的专有业务码清单。OK 与 HTTP_<数字> 形式的码是结构保留字，不得使用；比较按字节精确进行，不做大小写归一。专有码是否要避开某组通用码由使用方显式检查：把那组码传给参考资源出口的检查函数，不传就不比。",
   type: "object",
   properties: {
     service: {
@@ -741,11 +418,6 @@ export const serviceErrorCodesSchema: SchemaDocument = {
               not: {
                 type: "string",
                 pattern: "^HTTP_[0-9]+$",
-              },
-            },
-            {
-              not: {
-                $ref: "common-error-codes.schema.json#/$defs/code",
               },
             },
           ],
@@ -842,10 +514,9 @@ export const successEnvelopeSchema: SchemaDocument = {
   required: ["code", "message", "data"],
   additionalProperties: false,
 };
-/** 全部定义，键为定义的 $id（即文件名），可整体登记到校验器里。 */
+/** 全部结构定义，键为定义的 $id（即文件名），可整体登记到校验器里。 */
 export const schemas = {
   "bounded-list.schema.json": boundedListSchema,
-  "common-error-codes.schema.json": commonErrorCodesSchema,
   "cursor-list-request.schema.json": cursorListRequestSchema,
   "cursor-list.schema.json": cursorListSchema,
   "error-body.schema.json": errorBodySchema,

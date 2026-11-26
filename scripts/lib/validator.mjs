@@ -10,6 +10,11 @@ export const ANNOTATION_KEYWORDS = [
   "x-httpStatus",
   "x-paramPrefix",
   "x-pathConstants",
+  // 参考资源：x-referenceResource 标出整份定义是参考资源（不约束任何结构，
+  // 从参考资源出口导出）；x-referenceValue / x-referenceValues 是参考值，不是默认值。
+  "x-referenceResource",
+  "x-referenceValue",
+  "x-referenceValues",
 ];
 
 const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
@@ -30,8 +35,7 @@ export const CHECK_KEYWORDS = {
         !isNonNegativeInteger(totalRecord) ||
         !isNonNegativeInteger(totalPage) ||
         !Number.isInteger(pageSize) ||
-        pageSize < 1 ||
-        pageSize > 100
+        pageSize < 1
       ) {
         return [];
       }
@@ -57,9 +61,7 @@ export const CHECK_KEYWORDS = {
       // 上限本身不合法时交给标准关键字报错，这里不重复报。
       const limits = {
         pageSize:
-          Number.isInteger(page.pageSize) &&
-          page.pageSize >= 1 &&
-          page.pageSize <= 100
+          Number.isInteger(page.pageSize) && page.pageSize >= 1
             ? page.pageSize
             : undefined,
         totalRecord: isNonNegativeInteger(page.totalRecord)

@@ -13,6 +13,13 @@ export const EXAMPLES_DIR = path.join(SCHEMAS_DIR, "examples");
 
 const SCHEMA_SUFFIX = ".schema.json";
 
+/**
+ * 参考资源：整份定义只给参考值（如通用失败码表、列表的参考数值），不约束任何结构，
+ * 从参考资源出口导出；其余定义是结构，从主入口导出。
+ */
+export const isReferenceResource = (schema) =>
+  schema["x-referenceResource"] === true;
+
 /** 结构名：文件名去掉 .schema.json。 */
 export const baseName = (file) => file.slice(0, -SCHEMA_SUFFIX.length);
 

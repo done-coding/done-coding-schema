@@ -13,6 +13,11 @@
       "import": "./es/index.mjs",
       "require": "./lib/index.cjs"
     },
+    "./reference": {
+      "types": "./types/reference.d.ts",
+      "import": "./es/reference.mjs",
+      "require": "./lib/reference.cjs"
+    },
     "./schemas/*": "./schemas/*",
     "./package.json": "./package.json"
   },

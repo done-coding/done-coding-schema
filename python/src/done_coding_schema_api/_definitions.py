@@ -2,6 +2,9 @@
 
 包内 ``schemas/`` 与 npm 包的 ``schemas/`` 是同一批文件，逐字节照抄仓根 ``schemas/``
 （由 pnpm gen 生成，构建检查核对 wheel 与 sdist 里的副本）。
+
+定义分两层：结构定义从包顶层取（``schema_names`` / ``schema_path`` / ``load_schema``）；
+参考资源定义（带 ``x-referenceResource``，如通用失败码表）只从 ``reference`` 子模块取。
 """
 
 import json
@@ -17,32 +20,76 @@ def _directory() -> Path:
     return Path(str(files(__package__).joinpath("schemas")))
 
 
+def _file(name: str) -> Path:
+    return _directory() / f"{name}{_SUFFIX}"
+
+
+def _read(name: str) -> dict[str, Any]:
+    return json.loads(_file(name).read_text(encoding="utf-8"))
+
+
 @cache
-def schema_names() -> tuple[str, ...]:
-    """全部定义的名字（文件名去掉 .schema.json），如 ``"error-body"``。"""
-    return tuple(
-        sorted(
+def _layers() -> dict[str, bool]:
+    """全部定义名 → 是否参考资源。"""
+    return {
+        name: _read(name).get("x-referenceResource") is True
+        for name in sorted(
             path.name.removesuffix(_SUFFIX)
             for path in _directory().iterdir()
             if path.name.endswith(_SUFFIX)
         )
-    )
+    }
+
+
+def _names(reference: bool) -> tuple[str, ...]:
+    return tuple(name for name, is_ref in _layers().items() if is_ref is reference)
+
+
+def _checked(name: str, reference: bool) -> Path:
+    names = _names(reference)
+    if name not in names:
+        elsewhere = (
+            "结构定义从包顶层取"
+            if reference
+            else "参考资源定义从 done_coding_schema_api.reference 取"
+        )
+        hint = f"（{elsewhere}）" if name in _layers() else ""
+        raise KeyError(f"没有名为 {name!r} 的定义{hint}；可用：{', '.join(names)}")
+    return _file(name)
+
+
+def schema_names() -> tuple[str, ...]:
+    """全部结构定义的名字（文件名去掉 .schema.json），如 ``"error-body"``。"""
+    return _names(reference=False)
 
 
 def schema_path(name: str) -> Path:
-    """定义文件的路径，如 ``schema_path("error-body")`` → ``…/schemas/error-body.schema.json``。
+    """结构定义文件的路径，如 ``schema_path("error-body")`` → ``…/schemas/error-body.schema.json``。
 
     文件的 ``$id`` 即文件名，跨文件 ``$ref`` 也写文件名；整体登记到校验器时以 ``$id`` 为键。
-    名字不存在时抛 KeyError 并列出全部名字。
+    名字不存在、或是参考资源定义时抛 KeyError 并列出可用的名字。
     """
-    if name not in schema_names():
-        raise KeyError(f"没有名为 {name!r} 的定义；可用：{', '.join(schema_names())}")
-    return _directory() / f"{name}{_SUFFIX}"
+    return _checked(name, reference=False)
 
 
 def load_schema(name: str) -> dict[str, Any]:
-    """已解析的定义（每次返回新的字典，改动不影响包内文件与其他调用方）。"""
+    """已解析的结构定义（每次返回新的字典，改动不影响包内文件与其他调用方）。"""
     return json.loads(schema_path(name).read_text(encoding="utf-8"))
+
+
+def reference_schema_names() -> tuple[str, ...]:
+    """全部参考资源定义的名字，如 ``"common-error-codes"``。"""
+    return _names(reference=True)
+
+
+def reference_schema_path(name: str) -> Path:
+    """参考资源定义文件的路径；名字不存在、或是结构定义时抛 KeyError。"""
+    return _checked(name, reference=True)
+
+
+def load_reference_schema(name: str) -> dict[str, Any]:
+    """已解析的参考资源定义（每次返回新的字典）。"""
+    return json.loads(reference_schema_path(name).read_text(encoding="utf-8"))
 
 
 # ---- 模型导出 JSON Schema 用：按标题找到源定义，并展开成不带引用的单个结构 ----
@@ -55,8 +102,8 @@ _DOCUMENT_KEYWORDS = ("$schema", "$id", "$defs")
 def _titles() -> dict[str, tuple[str, str]]:
     """定义里的 title（即生成模型的类名）→ (定义名, 文件内 JSON Pointer)。"""
     index: dict[str, tuple[str, str]] = {}
-    for name in schema_names():
-        document = load_schema(name)
+    for name in _layers():
+        document = _read(name)
         nodes = [("", document)] + [
             (f"/$defs/{key}", node) for key, node in document.get("$defs", {}).items()
         ]
@@ -85,7 +132,7 @@ def _inline(node: Any, document: dict[str, Any]) -> Any:
     if "$ref" in node:
         target, _, pointer = node["$ref"].partition("#")
         if target:
-            document = load_schema(target.removesuffix(_SUFFIX))
+            document = _read(target.removesuffix(_SUFFIX))
         resolved = _inline(_resolve(document, pointer), document)
         siblings = {key: value for key, value in node.items() if key != "$ref"}
         return {**resolved, **_inline(siblings, document)}
@@ -98,5 +145,5 @@ def _inline(node: Any, document: dict[str, Any]) -> Any:
 
 def bundled_schema(name: str, pointer: str = "") -> dict[str, Any]:
     """定义（或其中 pointer 处的子结构）展开全部引用后的独立 JSON Schema。"""
-    document = load_schema(name)
+    document = _read(name)
     return _inline(_resolve(document, pointer), document)

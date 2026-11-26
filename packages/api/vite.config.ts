@@ -7,7 +7,8 @@ import pkg from "./package.json";
 export default defineConfig(({ command, mode }) => {
   const isPro = command === "build" && mode !== "hotBuild";
 
-  const inputList = ["src/index.ts"];
+  // 两个出口：结构（主入口）与参考资源（./reference）。
+  const inputList = ["src/index.ts", "src/reference.ts"];
 
   return {
     test: {

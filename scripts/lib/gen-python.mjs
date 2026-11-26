@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { buildConstants } from "./gen-constants.mjs";
+import { REFERENCE, STRUCTURE, buildConstants } from "./gen-constants.mjs";
 import { ROOT, baseName } from "./schemas.mjs";
 import { hasModelOutput, shapeOf } from "./shape.mjs";
 
@@ -151,14 +151,21 @@ function pyLiteral(value) {
   return `MappingProxyType({${items.join(", ")}})`;
 }
 
-/** 常量：与 npm 包同一份数据；联合类型用 Literal。 */
-export function generatePythonConstants(entries) {
+/** 常量：与 npm 包同一份数据；联合类型用 Literal。layer 选结构层或参考资源层。 */
+export function generatePythonConstants(entries, layer) {
+  const selected = buildConstants(entries).filter(
+    (constant) => constant.layer === layer,
+  );
+  const uses = (pattern) =>
+    selected.some(({ value, unionType }) =>
+      pattern.test(`${unionType ? "Literal" : ""}${pyLiteral(value)}`),
+    );
   const lines = [
-    "from types import MappingProxyType",
-    "from typing import Final, Literal",
+    ...(uses(/MappingProxyType/) ? ["from types import MappingProxyType"] : []),
+    `from typing import ${uses(/^Literal/) ? "Final, Literal" : "Final"}`,
     "",
   ];
-  for (const { name, doc, value, unionType } of buildConstants(entries)) {
+  for (const { name, doc, value, unionType } of selected) {
     lines.push(
       "",
       `${name}: Final = ${pyLiteral(value)}`,
@@ -180,7 +187,11 @@ export function generatePythonConstants(entries) {
  */
 export function buildPythonOutputs(entries) {
   const sources = generatePythonModels(entries);
-  sources.set("constants.py", generatePythonConstants(entries));
+  sources.set("constants.py", generatePythonConstants(entries, STRUCTURE));
+  sources.set(
+    "reference_constants.py",
+    generatePythonConstants(entries, REFERENCE),
+  );
   const outputs = new Map();
   for (const [name, source] of sources) {
     const filePath = path.join(PYTHON_GENERATED_DIR, name);

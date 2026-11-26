@@ -1,7 +1,7 @@
 {
   "valid": [
     {
-      "name": "都不带（用缺省值）",
+      "name": "page、pageSize 都不带（不带时的含义由接口自己声明）",
       "data": {}
     },
     {
@@ -49,6 +49,12 @@
       "data": {
         "page": 2.0,
         "pageSize": 20.0
+      }
+    },
+    {
+      "name": "pageSize 500（结构不设上限）",
+      "data": {
+        "pageSize": 500
       }
     }
   ],
@@ -128,14 +134,14 @@
       ]
     },
     {
-      "name": "pageSize 超过 100",
+      "name": "pageSize 不是整数（12.5）",
       "data": {
-        "pageSize": 101
+        "pageSize": 12.5
       },
       "errors": [
         {
           "instancePath": "/pageSize",
-          "keyword": "maximum"
+          "keyword": "type"
         }
       ]
     },

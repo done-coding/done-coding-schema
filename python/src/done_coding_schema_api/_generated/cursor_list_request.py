@@ -22,7 +22,7 @@ class CursorListRequest(SchemaModel):
     """
     上一批返回的 next，1–1024 个字符；首批不带。
     """
-    limit: Annotated[JsonInt | None, Field(ge=1, le=100)] = None
+    limit: Annotated[JsonInt | None, Field(ge=1)] = None
     """
-    本批最多取多少条；缺省值由各接口自定。
+    本批最多取多少条，至少 1；不带时取多少条、上限多少由接口自己声明。
     """

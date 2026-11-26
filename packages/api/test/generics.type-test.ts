@@ -8,11 +8,12 @@ import type {
   PagedList,
   SuccessEnvelope,
 } from "../src";
+import type * as Main from "../src";
 import {
   CURSOR_LIST_REQUEST_PARAMS,
   PAGED_LIST_REQUEST_PARAMS,
   PAGED_LIST_RESPONSE_PATHS,
-} from "../src";
+} from "../src/reference";
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
@@ -77,3 +78,13 @@ export const limitParam: "cursor.limit" = CURSOR_LIST_REQUEST_PARAMS.limit;
 
 // @ts-expect-error 当前页码只是请求参数，响应路径里没有
 export const pagePath = PAGED_LIST_RESPONSE_PATHS.page;
+
+// 主入口只有结构：参考资源的类型与常量从主入口取不到，要用须从 ./reference 显式引入。
+// @ts-expect-error 通用失败码的类型不在主入口
+export type NoCommonErrorCode = Main.CommonErrorCode;
+// @ts-expect-error 通用失败码表不在主入口
+export type NoCommonErrorCodeTable = typeof Main.COMMON_ERROR_CODE_TABLE;
+// @ts-expect-error 参考数值不在主入口
+export type NoPageValues = typeof Main.PAGED_LIST_REFERENCE_VALUES;
+// @ts-expect-error 码表定义文件不在主入口
+export type NoCommonErrorCodesSchema = typeof Main.commonErrorCodesSchema;

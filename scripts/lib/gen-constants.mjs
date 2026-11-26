@@ -1,4 +1,7 @@
-// 由定义生成常量：业务码、通用失败码表、列表的字段路径。值一律字面量（as const）。
+// 由定义生成常量：业务码、通用失败码表、列表的字段路径与参考数值。值一律字面量（as const）。
+//
+// 常量分两层：结构层（成功码，属外壳 code 的约束）从主入口导出；参考资源层（通用失败码、
+// 码表、路径与参数名、参考数值）从参考资源出口导出，使用方显式引入才用得到。
 
 const SUCCESS_SCHEMA = "success-envelope.schema.json";
 const COMMON_CODES_SCHEMA = "common-error-codes.schema.json";
@@ -19,15 +22,15 @@ function resolveLocal(schema, node) {
     .reduce((current, token) => current[token], schema);
 }
 
-/** 通用失败码表：读出每个码的 HTTP 状态与重试性、执行结局的缺省值，并核对与 $defs/code 一致。 */
+/** 通用失败码表：读出每个码的 HTTP 状态与重试性、执行结局的参考值，并核对与 $defs/code 一致。 */
 export function readCommonErrorCodes(schema) {
   const rows = schema.allOf.map((entry) => {
     const error = entry.then.properties.error.properties;
     return {
       code: entry.if.properties.code.const,
       httpStatus: entry["x-httpStatus"],
-      retryable: error.retryable.default,
-      outcome: error.outcome.default,
+      retryable: error.retryable["x-referenceValue"],
+      outcome: error.outcome["x-referenceValue"],
       meaning: entry.description,
     };
   });
@@ -87,10 +90,14 @@ function requestParams(schema) {
   );
 }
 
+/** 常量所在的层。 */
+export const STRUCTURE = "structure";
+export const REFERENCE = "reference";
+
 /**
  * 常量的数据：各语言按同一份数据渲染。
  * @param {{file: string, schema: Record<string, any>}[]} entries
- * @returns {{name: string, doc: string[], value: unknown, unionType?: string}[]}
+ * @returns {{name: string, doc: string[], value: unknown, unionType?: string, layer: string}[]}
  */
 export function buildConstants(entries) {
   const byFile = new Map(entries.map(({ file, schema }) => [file, schema]));
@@ -103,23 +110,26 @@ export function buildConstants(entries) {
       doc: ["成功码。成功外壳的 code 只能是这一组里的值。"],
       value: { [successCode]: successCode },
       unionType: "SuccessCode",
+      layer: STRUCTURE,
     },
     {
       name: "COMMON_ERROR_CODES",
       doc: [
-        "通用失败码。错误体的 code 是开放字符串，这里只列通用的一组；",
+        "通用失败码（参考资源）。错误体的 code 是开放字符串，这里只列通用的一组；",
         "各服务可以有自己的专有码，遇到不认识的码按 HTTP 状态归类处理。",
       ],
       value: Object.fromEntries(rows.map(({ code }) => [code, code])),
       unionType: "CommonErrorCode",
+      layer: REFERENCE,
     },
     {
       name: "COMMON_ERROR_CODE_TABLE",
       doc: [
-        "通用失败码 → HTTP 状态、能否重试与是否已执行（outcome）的缺省值、含义。",
-        "retryable 与 outcome 是缺省值：服务未另行指定时取表中值，能确定更具体的情形时可以覆盖。",
+        "通用失败码 → HTTP 状态、能否重试与是否已执行（outcome）的参考值、含义（参考资源）。",
+        "包不替使用方填写；使用方可显式引用表中值。",
       ],
       value: Object.fromEntries(rows.map(({ code, ...rest }) => [code, rest])),
+      layer: REFERENCE,
     },
   ];
 
@@ -135,17 +145,36 @@ export function buildConstants(entries) {
           : `${schema.title} 响应里各字段的路径（由定义 ${schema.$id} 生成）。`,
       ],
       value: isRequest ? requestParams(schema) : responsePaths(schema),
+      layer: REFERENCE,
     });
+  }
+
+  for (const { schema } of entries) {
+    for (const [name, { description, value }] of Object.entries(
+      schema["x-referenceValues"] ?? {},
+    )) {
+      constants.push({
+        name,
+        doc: [
+          `${description.replace(/。$/, "")}（由定义 ${schema.$id} 生成）。`,
+          "只是参考，不随任何结构生效；包不替使用方填写，要用须显式引用。",
+        ],
+        value,
+        layer: REFERENCE,
+      });
+    }
   }
   return constants;
 }
 
 /**
  * @param {{file: string, schema: Record<string, any>}[]} entries
+ * @param {string} layer STRUCTURE 或 REFERENCE
  * @returns {string} 未格式化的 TS 源码
  */
-export function generateConstants(entries) {
+export function generateConstants(entries, layer) {
   return buildConstants(entries)
+    .filter((constant) => constant.layer === layer)
     .flatMap(({ name, doc, value, unionType }) => [
       docComment(doc),
       `export const ${name} = ${literal(value)} as const;`,

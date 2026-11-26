@@ -29,7 +29,6 @@ from ._generated import list_filter as _filter
 from ._generated import paged_list as _paged
 from ._generated import service_error_codes as _service
 from ._generated import success_envelope as _success
-from ._generated.constants import COMMON_ERROR_CODE_TABLE, COMMON_ERROR_CODES
 
 DataT = TypeVar(
     "DataT",
@@ -184,18 +183,6 @@ class ErrorBody(_error.ErrorBody):
         return self
 
 
-def default_error_detail(code: str) -> _error.ErrorDetail | None:
-    """通用失败码的缺省处置信息（retryable 与 outcome 取码表值）；不是通用码时返回 None。
-
-    码表给的是缺省值：服务未另行指定时用它，能确定更具体的重试性或执行结局时可以覆盖，
-    如 ``default_error_detail("SERVICE_UNAVAILABLE").model_copy(update={"outcome": "not_executed"})``。
-    """
-    row = COMMON_ERROR_CODE_TABLE.get(code)
-    if row is None:
-        return None
-    return _error.ErrorDetail(retryable=row["retryable"], outcome=row["outcome"])
-
-
 class ListFilter(_filter.ListFilter):
     """筛选参数。"""
 
@@ -225,13 +212,10 @@ def _check_service_code(
     errors: ConstraintErrors, index: int, item: _service.ServiceErrorCode
 ) -> None:
     at = ("codes", index)
-    # 与 OK、HTTP_<数字>、通用码按字节比较，不做大小写归一。
-    if (
-        item.code == "OK"
-        or _RESERVED_HTTP_CODE.match(item.code)
-        or item.code in COMMON_ERROR_CODES
-    ):
-        errors.add((*at, "code"), "code_reserved", "是保留码或通用码", item.code)
+    # 结构保留字只有 OK 与 HTTP_<数字>，按字节比较，不做大小写归一。
+    # 要避开某组通用码由使用方显式检查，见 reference.find_reserved_codes。
+    if item.code == "OK" or _RESERVED_HTTP_CODE.match(item.code):
+        errors.add((*at, "code"), "code_reserved", "是结构保留码", item.code)
     if item.stage == "execute":
         if item.httpStatus is not None:
             errors.add(
