@@ -24,8 +24,8 @@ after: ""
 | 四ⓗ | 导出的 JSON Schema 反映使用方子类 | 完成 | 4f3663f |
 | 四ⓘ | 校验器去掉写死的 pageSize 上限 | 完成 | d13195e |
 | 五 | 样例与 README | 完成 | d13195e（样例）、94c7143（README） |
-| 发布 | 第三个预发布版：检查、构建、上传、线上核对 | 待做 | |
-| 收口 | 快照、归档。收工 | 待做 | |
+| 发布 | 第三个预发布版：检查、构建、上传、线上核对 | 完成 | 7bfe568，见进度记录 |
+| 收口 | 快照、归档。收工 | 完成 | 归档提交 |
 
 ## 进度记录
 
@@ -56,3 +56,33 @@ after: ""
   - 「请求不带 page、pageSize」原本就是合法例，只改了名字。
   - 合计：合法 106、不合法 209，约束 154 条全覆盖（上一版 102 / 211 / 158）。
 - 2026-11-27 发布前检查：`pnpm check` 退出码 0。样例结果同上；生成物 39 个一致；TS 10 个测试；Python 710 个测试；构建产物无 Node 专用依赖；wheel 与 sdist 各含 11 份定义与 LICENSE。
+- 2026-11-27 发布（按 `docs/release.md`「本机发布」）：
+  - 定版本：npm 0.0.1-alpha.1 → 0.0.1-alpha.2，Python 0.0.1a1 → 0.0.1a2；版本提交 7bfe568，标签 `@done-coding/schema-api@0.0.1-alpha.2`。在版本提交上再跑 `pnpm check`，退出码 0。
+  - 最低支持版本另验：Python 3.10.20 加 pydantic 2.11.10，装本机构建的 wheel（确认导入的是装好的包）跑全部 710 个测试，全部通过。
+  - 仓外构建：npm 20 个文件（新增 `es/reference.mjs`、`lib/reference.cjs`、`types/reference.d.ts` 与参考数值定义）；wheel 与 sdist 各含 11 份定义与 LICENSE，wheel 含 `reference.py` 与 `_generated/reference_constants.py`。三个包解开后扫过，没有本机路径。
+  - 上传：npm `+ @done-coding/schema-api@0.0.1-alpha.2`（tag alpha）；PyPI 的 wheel 与 sdist 上传成功。令牌只经环境变量传入，npmrc 里只有占位，用完删除。
+- 2026-11-27 线上核对：
+  - npm dist-tags：`alpha` = 0.0.1-alpha.2，`latest` 仍是 0.0.1-alpha.0；线上 shasum 与本机构建相同（9eb6f61d…）。
+  - PyPI 0.0.1a2，license MIT，sha256 与本机构建相同（wheel 39ed51bb…，sdist 7bf732c3…）。
+  - 空目录（npm）：`@done-coding/schema-api@alpha` 装到 0.0.1-alpha.2。README 的 6 段 TS 用 tsc 检查通过；另一个反例文件证明主入口取不到 `COMMON_ERROR_CODES`（`@ts-expect-error` 生效）。ESM 与 CJS 两种方式都取不到主入口的 `COMMON_ERROR_CODES`，`./reference` 两种方式都取得到。用主入口的结构定义加 Ajv 判：请求与响应 `pageSize` 500、`limit` 500、请求不带 page / pageSize、专有码 `NOT_FOUND` 都合法；`pageSize` 0 与 12.5 不合法；错误体 code 为 OK 仍不合法。`findReservedCodes` 传入通用码时指出撞码，不传就不比。
+  - 空目录（pip）：Python 3.12 新环境，`--prerelease allow` 装到 0.0.1a2（pydantic 2.14.4），另装 fastapi 0.162.5。仓根 README 的 5 段 Python 与包 README 片段原样运行通过，其中专有码检查那段按预期抛出撞码。包顶层取不到 `COMMON_ERROR_CODES` 与 `default_error_detail`，`.reference` 取得到。`OrderPageRequest` 导出 `pageSize` 为源定义加 `default: 20`、`maximum: 50`；FastAPI 里 `class UserPage(PagedList[User])` 的 items 引用 User。
+- 2026-11-27 快照替换（`SNAPSHOT.md`）：
+  - `definition` 一行：10 份定义 → 9 份结构加 2 份参考资源，并写明结构里没有具体配置值。
+  - `toolchain` 一行：补上生成物按结构层与参考资源层各出一份。
+  - `npm-package` 与 `pypi-package` 两行：版本更新到 alpha.2 / a2，导出内容改为两层出口；`default_error_detail` 改为 `reference.py` 里的 `reference_error_detail`。
+  - 契约：「错误体经 allOf 引用码表、只给缺省值（default）」改为新增的「结构与参考资源分层」一条；引用方式一条改为目前只有文件内引用；标注里补上三个 `x-reference*`；「导出即定义」补上子类改动与已知限制；版本一条改为 alpha.2。
+  - 移出的历史内容：无，旧事实直接替换。
+- 收工。推送仍由维护者本人做：分支 `master`、`feat/schema-v0`，标签 `@done-coding/schema-api@0.0.1-alpha.0`、`0.0.1-alpha.1`、`0.0.1-alpha.2`。
+
+## 交付清单
+
+- d13195e：定义清理与两层出口（含样例、生成器、两种语言的包与测试）。
+- 4f3663f：导出的 JSON Schema 反映使用方子类。
+- 94c7143：README。
+- 3ae4ff5：实现进度记录。
+- 7bfe568：版本提交（0.0.1-alpha.2 / 0.0.1a2）。
+- 归档提交：快照与本批归档。
+
+## 结果
+
+- 第三个预发布版已在 npm（alpha）与 PyPI 发布，空目录各装一次验证通过。
