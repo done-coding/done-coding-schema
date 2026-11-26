@@ -16,6 +16,13 @@ export const PYTHON_GENERATED_DIR = path.join(
   PACKAGE,
   "_generated",
 );
+/** Python 包里随包分发的定义文件（与 npm 包的 schemas/ 同一批，逐字节照抄）。 */
+export const PYTHON_SCHEMA_DIR = path.join(
+  PYTHON_PROJECT,
+  "src",
+  PACKAGE,
+  "schemas",
+);
 
 const BANNER = [
   "# 本文件由 scripts/generate.mjs 依据 schemas/ 的定义生成，勿手改。",

@@ -21,7 +21,7 @@
     "check:python": "uv run --project python --frozen pytest -q",
     "check:versions": "node scripts/check-versions.mjs",
     "check:license": "node scripts/check-license.mjs",
-    "check:wheel": "uv build --project python -q"
+    "check:wheel": "uv run --project python --frozen python scripts/check-python-dist.py"
   },
   "author": "JustSoSu",
   "license": "MIT",
@@ -63,10 +63,10 @@
     "schemas/**/*.json": [
       "node scripts/check-examples.mjs"
     ],
-    "{schemas,packages/*/schemas,packages/*/src/generated,python/src/*/_generated}/**": [
+    "{schemas,packages/*/schemas,packages/*/src/generated,python/src/*/_generated,python/src/*/schemas}/**": [
       "node scripts/generate.mjs --check"
     ],
-    "python/**/*.py": [
+    "{python,scripts}/**/*.py": [
       "uvx --from 'ruff==0.16.9' ruff check --fix --force-exclude",
       "uvx --from 'ruff==0.16.9' ruff format --force-exclude"
     ],

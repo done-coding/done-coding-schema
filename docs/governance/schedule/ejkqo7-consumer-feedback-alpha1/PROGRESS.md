@@ -20,7 +20,7 @@ after: ""
 | ⓒ | 整数字段接受值为整数的浮点 | 完成 | 见进度记录 |
 | ⓓ | 页码式列表条数约束 | 完成 | 见进度记录 |
 | ⓔ | 校验器报错位置指到具体字段 | 完成 | 见进度记录 |
-| ⓐ | Python 包带定义文件与取用函数 | 待做 | |
+| ⓐ | Python 包带定义文件与取用函数 | 完成 | 见进度记录（README 随 ⓕⓗ 一并写） |
 | ⓑ | 模型导出的 JSON Schema 为源定义 | 待做 | |
 | ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 待做 | |
 | ⓕ′ | 通用码的 retryable / outcome 改为缺省值（更正） | 完成 | 见进度记录 |
@@ -58,3 +58,8 @@ after: ""
   - 写法沿用同类的跨字段约束 `x-totalPageEqualsCeil`：在 `paged-list.schema.json` 顶层加补充检查关键字 `x-itemsWithinPage: true`，定义说明里写明这条约束。只加约束，不改字段，也不增减结构。理由：标准 JSON Schema 表达不了；写进定义，才能让仓内的定义校验（Ajv + x- 关键字）与 Python 对同一份数据给出相同结论（ⓗ）。普通校验器会忽略它，TS 侧在 README 说明。
   - `validator.mjs` 实现：条数超过 pageSize、超过 totalRecord 各报一项，位置 `/items`；上限本身不合法时不报，交给标准关键字。Python 在 `PagedList._page_consistency` 实现，位置 `("items",)`。
   - 样例：2 个合法例（条数恰等于 pageSize、恰等于 totalRecord），4 个反例（超 pageSize、超 totalRecord、总数为 0 却有数据、两者都超）。约束共 158 条，全部有反例覆盖。
+- 2026-11-26 ⓐ 定义文件进 Python 包：
+  - `pnpm gen` 把仓根 10 份定义原样写进 `python/src/done_coding_schema_api/schemas/`，与 npm 包 `schemas/` 是同一批文件，由 `check:generated` 核对。共 34 个生成物。
+  - 新增 `_definitions.py`，从包根导出三个函数：`schema_names()`（全部名字）、`schema_path(name)`（返回 Path，名字不存在时 KeyError 并列出可用名字）、`load_schema(name)`（每次返回新的字典）。名字是文件名去掉 `.schema.json`，如 `"error-body"`。
+  - `check:wheel` 改为 `scripts/check-python-dist.py`（只用标准库）：构建到临时目录，核对 wheel 与 sdist 各含全部定义文件、与仓根逐字节一致、不多不少，并带 LICENSE。手放一个多余的定义文件时退出码 1（实测）。
+  - lint-staged：生成物核对覆盖 `python/src/*/schemas`；ruff 覆盖 `scripts/*.py`。

@@ -1,4 +1,4 @@
-// 由 schemas/ 的定义生成 npm 包里的类型、常量与定义文件，以及 Python 包里的模型与常量。
+// 由 schemas/ 的定义生成 npm 包里的类型、常量与定义文件，以及 Python 包里的模型、常量与定义文件。
 //
 //   node scripts/generate.mjs           写出全部生成物（并删掉不再生成的旧文件）
 //   node scripts/generate.mjs --check   只比对：生成物被手改、或改了定义没重新生成时退出码 1
@@ -6,7 +6,11 @@ import fs from "node:fs";
 import path from "node:path";
 import * as prettier from "prettier";
 import { generateConstants } from "./lib/gen-constants.mjs";
-import { PYTHON_GENERATED_DIR, buildPythonOutputs } from "./lib/gen-python.mjs";
+import {
+  PYTHON_GENERATED_DIR,
+  PYTHON_SCHEMA_DIR,
+  buildPythonOutputs,
+} from "./lib/gen-python.mjs";
 import {
   generateSchemaFiles,
   generateSchemaModule,
@@ -51,6 +55,7 @@ async function buildOutputs() {
   );
   for (const { file, content } of generateSchemaFiles(entries)) {
     await add(path.join(JSON_DIR, file), content);
+    await add(path.join(PYTHON_SCHEMA_DIR, file), content);
   }
   for (const [filePath, content] of buildPythonOutputs(entries)) {
     outputs.set(filePath, content);
@@ -60,7 +65,7 @@ async function buildOutputs() {
 
 /** 生成目录里现有的文件（用来发现不再生成的旧文件）。 */
 const existingFiles = () =>
-  [TS_DIR, JSON_DIR, PYTHON_GENERATED_DIR].flatMap((dir) =>
+  [TS_DIR, JSON_DIR, PYTHON_GENERATED_DIR, PYTHON_SCHEMA_DIR].flatMap((dir) =>
     fs.existsSync(dir)
       ? fs
           .readdirSync(dir, { withFileTypes: true })
