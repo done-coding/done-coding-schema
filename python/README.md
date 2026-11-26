@@ -24,6 +24,6 @@ class User(BaseModel):
 UserPage = SuccessEnvelope[PagedList[User]]  # 可直接用作接口的返回类型
 ```
 
-模型是严格类型的，结构里的跨字段约束（如 `totalPage` 等于 `ceil(totalRecord / pageSize)`）也已包含在内。
+模型是严格类型的，结构里的跨字段约束（如 `totalPage` 等于 `ceil(totalRecord / pageSize)`）也已包含在内；校验报错指到具体字段。`model_json_schema()` 与 FastAPI 生成的 OpenAPI 导出的就是定义本身。包里另带全部 JSON Schema 定义文件：`schema_path("error-body")` 取路径，`load_schema("error-body")` 取已解析的字典。
 
 各结构的说明、怎么选列表、业务码与版本规则见仓库 README：<https://github.com/done-coding/done-coding-schema#readme>

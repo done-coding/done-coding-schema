@@ -5,7 +5,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 | 语言 | 包 | 内容 |
 |---|---|---|
 | TypeScript / JavaScript | npm [`@done-coding/schema-api`](https://www.npmjs.com/package/@done-coding/schema-api) | 类型、业务码与字段路径常量、定义文件；可在浏览器端引入 |
-| Python | PyPI [`done-coding-schema-api`](https://pypi.org/project/done-coding-schema-api/)（导入名 `done_coding_schema_api`） | Pydantic v2 模型与常量 |
+| Python | PyPI [`done-coding-schema-api`](https://pypi.org/project/done-coding-schema-api/)（导入名 `done_coding_schema_api`） | Pydantic v2 模型、常量与定义文件 |
 
 两个包从同一个提交构建、用同一个版本号。定义文件在 [`schemas/`](schemas/)，每个结构配有合法与不合法样例（[`schemas/examples/`](schemas/examples/)）。
 
@@ -14,6 +14,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 - 字段名一律小驼峰；时间用带时区的 RFC 3339 文本。
 - 除特别说明外，对象不接受未声明的字段。
 - 带格式的字符串（业务码、请求标识、排序参数等）不接受末尾换行。
+- 整数按 JSON Schema 的语义判定：`12` 与 `12.0` 都是整数，`12.5`、字符串 `"12"`、布尔不是。
 
 ## 结构
 
@@ -61,7 +62,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 { "items": [{ "value": "a", "label": "甲" }] }
 ```
 
-**页码式**：给人翻页的表格，能跳页、有总数。`totalPage` 等于 `ceil(totalRecord / pageSize)`，总数为 0 时为 0；`pageSize` 回显请求值；不回传当前页码。
+**页码式**：给人翻页的表格，能跳页、有总数。`totalPage` 等于 `ceil(totalRecord / pageSize)`，总数为 0 时为 0；`items` 的条数不超过 `pageSize`，也不超过 `totalRecord`；`pageSize` 回显请求值；不回传当前页码。
 
 ```json
 { "items": [{ "id": 1 }], "page": { "totalRecord": 21, "pageSize": 10, "totalPage": 3 } }
@@ -129,6 +130,34 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 **遇到不认识的码**：按 HTTP 状态归类处理（4xx 按调用方问题、5xx 按服务端问题），再参考 `error.retryable` 与 `error.outcome` 决定能否重试。
 
+## 有意为之的约束
+
+下面几条常被问到，都是有意的，定义文件里都写着，任何 JSON Schema 2020-12 校验器都会检查：
+
+- **三种列表靠顶层字段互相区分**：页码式顶层不得带 `cursor`，游标式不得带 `page`，一次性列表两者都不得带。同一份数据只能是其中一种，调用方不用猜。
+- **错误体的 `code` 不能是 `OK`**：`OK` 是成功码，失败响应用它会让只看 `code` 的调用方误判。
+- **字段错误的 `message` 最长 1000 个字符**：与其他说明字段一致；更长的补充说明放错误体的 `detail`。
+- **字段指针整串匹配，末尾带换行不合法**：定义里的正则按 ECMA-262 语义，`$` 只匹配文本末尾；Python 包也按这个语义判，不沿用 Python `re` 里 `$` 可匹配末尾换行之前的行为。
+
+通用失败码的 `retryable` 与 `outcome` 不在此列：码表给的是缺省值，错误体里可以覆盖（见上文「业务码」）。
+
+## 定义文件表达不了的约束
+
+标准 JSON Schema 写不出跨字段的比较，下面几条在定义里用 `x-` 开头的扩展关键字标注：
+
+| 约束 | 扩展关键字 | 所在定义 |
+|---|---|---|
+| `totalPage` 等于 `ceil(totalRecord / pageSize)` | `x-totalPageEqualsCeil` | 页码式列表的 `page` |
+| `items` 的条数不超过 `pageSize`，也不超过 `totalRecord` | `x-itemsWithinPage` | 页码式列表 |
+| 专有码清单内 `code` 不重复 | `x-uniqueItemsBy` | 专有码清单的 `codes` |
+| `additionalHttpStatuses` 不含 `httpStatus` | `x-arrayExcludesProperty` | 专有码清单的一项 |
+
+谁来检查：
+
+- **Python 包**：模型里已实现，与定义的判定一致。
+- **本仓的样例校验**：按同一语义实现（[`scripts/lib/validator.mjs`](scripts/lib/validator.mjs)）。两种语言的结论用同一组样例逐例核对（见「开发」）。
+- **TypeScript / 其他校验器**：通用校验器会忽略这些关键字。拿定义文件自己校验时，需要的话照 `scripts/lib/validator.mjs` 补上。
+
 ## TypeScript
 
 ```bash
@@ -184,7 +213,7 @@ const validateErrorBody = ajv.getSchema("error-body.schema.json")!;
 validateErrorBody({ code: "OK", message: "x", data: null, error: { retryable: false, outcome: "unknown" }, requestId: "r" }); // false
 ```
 
-标准 JSON Schema 写不出的三条跨字段约束以扩展关键字标注，通用校验器不会检查，需要时自行补上：`x-totalPageEqualsCeil`（`totalPage` 等于 `ceil(totalRecord / pageSize)`）、`x-uniqueItemsBy`（专有码清单内 `code` 不重复）、`x-arrayExcludesProperty`（`additionalHttpStatuses` 不含 `httpStatus`）。
+以 `x-` 开头的跨字段约束 Ajv 不会检查，见「定义文件表达不了的约束」。
 
 ## Python
 
@@ -192,7 +221,7 @@ validateErrorBody({ code: "OK", message: "x", data: null, error: { retryable: fa
 pip install done-coding-schema-api
 ```
 
-需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。模型是严格类型的（不做 `"10"` → `10` 这类转换），上面三条跨字段约束也已包含在内。
+需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。模型是严格类型的：不做 `"10"` → `10` 这类转换；整数字段接受 `12.0` 并归一成 `12`（与 JSON Schema 一致）。「定义文件表达不了的约束」也已包含在内。
 
 ```python
 from pydantic import BaseModel
@@ -235,6 +264,20 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 
 输出用线上字段名（如出错字段的 `in`，Python 里的属性名是 `in_`）；列表顶层的附带字段原样保留。
 
+**校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。
+
+**导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。
+
+**定义文件**：包里带着与 npm 包同一批的定义文件，可以交给任何 JSON Schema 校验器：
+
+```python
+from done_coding_schema_api import load_schema, schema_names, schema_path
+
+schema_names()  # ('bounded-list', 'common-error-codes', 'cursor-list', ...)
+schema_path("error-body")  # 包内 error-body.schema.json 的路径
+load_schema("error-body")["$id"]  # 'error-body.schema.json'（每次返回新的字典）
+```
+
 ## 版本与兼容
 
 - 两个包同一版本号，遵循语义化版本。npm 的预发布版本 `X.Y.Z-alpha.N` 在 PyPI 上写作 `X.Y.ZaN`（`beta` → `b`、`rc` → `rc`）。
@@ -253,6 +296,8 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 |---|---|
 | `pnpm install`、`uv sync --project python` | 安装依赖 |
 | `pnpm gen` | 由 `schemas/` 生成两个包里的类型、模型与常量（生成物不手改） |
-| `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查 |
+| `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查（含 wheel 与 sdist 里的定义文件） |
+
+**两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（`python/tests/test_examples.py`，JSON 与 Python 两种输入都测）。两边结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码覆盖缺省值这类边界。
 
 发布流程见 [`docs/release.md`](docs/release.md)。

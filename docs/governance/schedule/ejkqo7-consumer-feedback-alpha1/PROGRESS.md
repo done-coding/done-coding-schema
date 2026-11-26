@@ -22,7 +22,7 @@ after: ""
 | ⓔ | 校验器报错位置指到具体字段 | 完成 | 见进度记录 |
 | ⓐ | Python 包带定义文件与取用函数 | 完成 | 见进度记录（README 随 ⓕⓗ 一并写） |
 | ⓑ | 模型导出的 JSON Schema 为源定义 | 完成 | 见进度记录 |
-| ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 待做 | |
+| ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 完成 | 见进度记录 |
 | ⓕ′ | 通用码的 retryable / outcome 改为缺省值（更正） | 完成 | 见进度记录 |
 | ⓖ | 不加个人信息过滤等规则 | 完成 | 不改动 |
 | 发布 | 第二个预发布版：检查、构建、上传、线上核对 | 待做 | |
@@ -75,3 +75,12 @@ after: ""
     - FastAPI 生成的 OpenAPI 里，没有任何可选字段允许 null；ErrorBody、ServiceErrorCodes 组件与 `model_json_schema()` 相同；`PagedList[User]` 的元素引用 `#/components/schemas/User`。
   - 已知限度：FastAPI 文档里会多出一个未被引用的 `PagedListPage` 组件。它来自泛型取默认结构时 pydantic 登记的嵌套模型，内容也是源定义，不影响引用。
   - 新增开发依赖 FastAPI 0.162.5（2026-11-11 发布，MIT）。传递依赖：Starlette 1.10.0（BSD-3-Clause）、anyio（MIT）、idna（BSD-3-Clause）、opentelemetry-api（Apache-2.0）、annotated-doc（MIT）。只用于测试，不进运行时依赖。
+- 2026-11-26 ⓕⓗ：
+  - README 新增两节：「有意为之的约束」（三种列表互斥字段、错误体 code 不为 OK、字段错误 message 上限 1000、字段指针整串匹配，并注明通用码的 retryable / outcome 已改为缺省值）与「定义文件表达不了的约束」（4 个 x- 关键字的含义，以及谁来检查）。
+  - README 另补的内容：通用约定加整数语义；页码式加条数规则；Python 一节加报错位置、导出即定义、定义文件取用函数；「开发」加两种语言一致性的说明。Python 包 README 同步。README 的 Python 片段原样运行通过。
+  - ⓗ 的做法：沿用现有的 `schemas/examples/`。每个样例先由定义判（`check:examples`，Ajv 加 x- 关键字实现），再由 Python 对外模型以 JSON 与 Python 两种输入判（`test_examples.py`），两边须逐例相同。本批新增的边界样例：
+    - ⓒ：4 个整数值浮点的合法例、4 个布尔反例；12.5 与字符串 "12" 的反例原已有。
+    - ⓓ：2 个合法例、4 个反例。
+    - ⓕ：补「字段错误 message 恰 1000 字符」合法例；其余反例原已有。
+    - 更正：码表覆盖的 23 例改为合法，其中含 SERVICE_UNAVAILABLE 的两例。
+  - 当前合计合法 102、不合法 211，约束 158 条，全部有反例覆盖。
