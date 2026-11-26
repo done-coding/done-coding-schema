@@ -43,3 +43,60 @@ def schema_path(name: str) -> Path:
 def load_schema(name: str) -> dict[str, Any]:
     """已解析的定义（每次返回新的字典，改动不影响包内文件与其他调用方）。"""
     return json.loads(schema_path(name).read_text(encoding="utf-8"))
+
+
+# ---- 模型导出 JSON Schema 用：按标题找到源定义，并展开成不带引用的单个结构 ----
+
+# 只在定义文档层面有意义的关键字：展开引用后去掉，嵌进 OpenAPI 等文档时不改变解析基准。
+_DOCUMENT_KEYWORDS = ("$schema", "$id", "$defs")
+
+
+@cache
+def _titles() -> dict[str, tuple[str, str]]:
+    """定义里的 title（即生成模型的类名）→ (定义名, 文件内 JSON Pointer)。"""
+    index: dict[str, tuple[str, str]] = {}
+    for name in schema_names():
+        document = load_schema(name)
+        nodes = [("", document)] + [
+            (f"/$defs/{key}", node) for key, node in document.get("$defs", {}).items()
+        ]
+        for pointer, node in nodes:
+            if isinstance(node, dict) and "title" in node:
+                index[node["title"]] = (name, pointer)
+    return index
+
+
+def source_of(title: str) -> tuple[str, str] | None:
+    return _titles().get(title)
+
+
+def _resolve(document: Any, pointer: str) -> Any:
+    for token in pointer.split("/")[1:] if pointer else []:
+        document = document[token.replace("~1", "/").replace("~0", "~")]
+    return document
+
+
+def _inline(node: Any, document: dict[str, Any]) -> Any:
+    """展开 $ref（文件内与跨文件），去掉文档层面的关键字。定义里没有递归引用。"""
+    if isinstance(node, list):
+        return [_inline(child, document) for child in node]
+    if not isinstance(node, dict):
+        return node
+    if "$ref" in node:
+        target, _, pointer = node["$ref"].partition("#")
+        if target:
+            document = load_schema(target.removesuffix(_SUFFIX))
+        resolved = _inline(_resolve(document, pointer), document)
+        siblings = {key: value for key, value in node.items() if key != "$ref"}
+        return {**resolved, **_inline(siblings, document)}
+    return {
+        key: _inline(value, document)
+        for key, value in node.items()
+        if key not in _DOCUMENT_KEYWORDS
+    }
+
+
+def bundled_schema(name: str, pointer: str = "") -> dict[str, Any]:
+    """定义（或其中 pointer 处的子结构）展开全部引用后的独立 JSON Schema。"""
+    document = load_schema(name)
+    return _inline(_resolve(document, pointer), document)

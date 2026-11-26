@@ -21,7 +21,7 @@ after: ""
 | ⓓ | 页码式列表条数约束 | 完成 | 见进度记录 |
 | ⓔ | 校验器报错位置指到具体字段 | 完成 | 见进度记录 |
 | ⓐ | Python 包带定义文件与取用函数 | 完成 | 见进度记录（README 随 ⓕⓗ 一并写） |
-| ⓑ | 模型导出的 JSON Schema 为源定义 | 待做 | |
+| ⓑ | 模型导出的 JSON Schema 为源定义 | 完成 | 见进度记录 |
 | ⓕⓗ | 有意为之的约束写进 README；跨语言一致性样例 | 待做 | |
 | ⓕ′ | 通用码的 retryable / outcome 改为缺省值（更正） | 完成 | 见进度记录 |
 | ⓖ | 不加个人信息过滤等规则 | 完成 | 不改动 |
@@ -63,3 +63,15 @@ after: ""
   - 新增 `_definitions.py`，从包根导出三个函数：`schema_names()`（全部名字）、`schema_path(name)`（返回 Path，名字不存在时 KeyError 并列出可用名字）、`load_schema(name)`（每次返回新的字典）。名字是文件名去掉 `.schema.json`，如 `"error-body"`。
   - `check:wheel` 改为 `scripts/check-python-dist.py`（只用标准库）：构建到临时目录，核对 wheel 与 sdist 各含全部定义文件、与仓根逐字节一致、不多不少，并带 LICENSE。手放一个多余的定义文件时退出码 1（实测）。
   - lint-staged：生成物核对覆盖 `python/src/*/schemas`；ruff 覆盖 `scripts/*.py`。
+- 2026-11-26 ⓑ 导出即源定义：
+  - `_base.source_json_schema` 作为 pydantic 的 `__get_pydantic_json_schema__` 钩子，接在 `SchemaModel`（全部生成模型与包装模型）和 `ListFilter`（RootModel）上。它沿继承链找到生成的类，按类名（即定义的 title）定位源定义。
+  - `_definitions.bundled_schema` 把源定义里的引用展开：文件内引用与跨文件引用（错误体引用的码表、专有码引用的通用码列表）都展开，并去掉 `$schema`、`$id`、`$defs`。这样嵌进 OpenAPI 后，引用基准不会错。约束与 x- 关键字原样保留。
+  - 泛型给了类型参数时，`__schema_type_params__` 列出的字段换成类型参数生成的结构：列表换 `items.items`，外壳换 `data`（保留 description）。子类另外声明的字段按 pydantic 默认结果补进 properties。
+  - 测试 `tests/test_json_schema.py`（37 例）覆盖以下几方面：
+    - 15 个对外模型在 validation、serialization 两种模式下，导出结果都与源定义逐项相同（测试里另写了展开 $ref 的比较，不复用实现里按标题查找的逻辑）。
+    - x- 约束确实导出。
+    - 三种列表与外壳的泛型只替换参数处，其余与源定义相同。
+    - 子类补字段。
+    - FastAPI 生成的 OpenAPI 里，没有任何可选字段允许 null；ErrorBody、ServiceErrorCodes 组件与 `model_json_schema()` 相同；`PagedList[User]` 的元素引用 `#/components/schemas/User`。
+  - 已知限度：FastAPI 文档里会多出一个未被引用的 `PagedListPage` 组件。它来自泛型取默认结构时 pydantic 登记的嵌套模型，内容也是源定义，不影响引用。
+  - 新增开发依赖 FastAPI 0.162.5（2026-11-11 发布，MIT）。传递依赖：Starlette 1.10.0（BSD-3-Clause）、anyio（MIT）、idna（BSD-3-Clause）、opentelemetry-api（Apache-2.0）、annotated-doc（MIT）。只用于测试，不进运行时依赖。

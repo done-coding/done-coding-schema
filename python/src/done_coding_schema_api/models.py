@@ -16,10 +16,12 @@
 import re
 from typing import Any, Generic
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, GetJsonSchemaHandler, model_validator
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import CoreSchema
 from typing_extensions import TypeVar
 
-from ._base import ConstraintErrors
+from ._base import ConstraintErrors, source_json_schema
 from ._generated import bounded_list as _bounded
 from ._generated import cursor_list as _cursor
 from ._generated import error_body as _error
@@ -53,11 +55,15 @@ def _forbid_keys(model: type, data: Any, keys: tuple[str, ...], what: str) -> An
 class SuccessEnvelope(_success.SuccessEnvelope, Generic[DataT]):
     """成功外壳。``DataT`` 是结果对象的类型（或 None）。"""
 
+    __schema_type_params__ = ("data",)
+
     data: DataT
 
 
 class BoundedList(_bounded.BoundedList, Generic[ItemT]):
     """一次性列表。``ItemT`` 是元素类型。"""
+
+    __schema_type_params__ = ("items",)
 
     items: list[ItemT]
 
@@ -69,6 +75,8 @@ class BoundedList(_bounded.BoundedList, Generic[ItemT]):
 
 class PagedList(_paged.PagedList, Generic[ItemT]):
     """页码式列表。``ItemT`` 是元素类型。"""
+
+    __schema_type_params__ = ("items",)
 
     items: list[ItemT]
 
@@ -108,6 +116,8 @@ class PagedList(_paged.PagedList, Generic[ItemT]):
 
 class CursorList(_cursor.CursorList, Generic[ItemT]):
     """游标式列表。``ItemT`` 是元素类型。"""
+
+    __schema_type_params__ = ("items",)
 
     items: list[ItemT]
 
@@ -188,6 +198,13 @@ def default_error_detail(code: str) -> _error.ErrorDetail | None:
 
 class ListFilter(_filter.ListFilter):
     """筛选参数。"""
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        # RootModel 不继承 SchemaModel，单独接上「导出即源定义」。
+        return source_json_schema(cls, core_schema, handler)
 
     @model_validator(mode="after")
     def _conditions(self) -> "ListFilter":

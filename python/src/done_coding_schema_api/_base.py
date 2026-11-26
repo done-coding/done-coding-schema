@@ -6,13 +6,78 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
+    GetJsonSchemaHandler,
+    RootModel,
     Strict,
     ValidationError,
     model_validator,
 )
-from pydantic_core import InitErrorDetails, PydanticCustomError
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import CoreSchema, InitErrorDetails, PydanticCustomError
+
+from ._definitions import bundled_schema, source_of
 
 Loc = tuple[str | int, ...]
+
+_GENERATED_MODULES = f"{__package__}._generated."
+
+
+def source_json_schema(
+    model: type[BaseModel], core_schema: CoreSchema, handler: GetJsonSchemaHandler
+) -> JsonSchemaValue:
+    """模型导出的 JSON Schema = 对应的源定义（展开引用后原样带出，x- 约束一并保留）。
+
+    - 沿继承链找到生成的类，按类名（即定义的 title）定位源定义；找不到则用 pydantic 的默认结果；
+    - 泛型已给类型参数时，``__schema_type_params__`` 列出的字段（items 的元素、data）
+      换成类型参数生成的结构；
+    - 子类另外声明、源定义里没有的字段，按 pydantic 的默认结果补进 properties。
+    """
+    source = next(
+        (
+            located
+            for klass in model.__mro__
+            if klass.__module__.startswith(_GENERATED_MODULES)
+            and (located := source_of(klass.__name__)) is not None
+        ),
+        None,
+    )
+    if source is None:
+        return handler(core_schema)
+    schema = bundled_schema(*source)
+    properties = schema.get("properties", {})
+    typed = (
+        getattr(model, "__schema_type_params__", ())
+        if getattr(model, "__pydantic_generic_metadata__", {}).get("args")
+        else ()
+    )
+    # RootModel 的 root 是整体本身，不是字段。
+    declared = (
+        []
+        if issubclass(model, RootModel)
+        else [field.alias or name for name, field in model.__pydantic_fields__.items()]
+    )
+    extra = [name for name in declared if name not in properties]
+    if not typed and not extra:
+        return schema
+    default = handler.resolve_ref_schema(handler(core_schema))
+    generated = default.get("properties", {})
+    for name in typed:
+        if name == "items":
+            properties["items"] = {
+                **properties["items"],
+                "items": generated["items"]["items"],
+            }
+        else:
+            description = properties[name].get("description")
+            properties[name] = {
+                **({"description": description} if description else {}),
+                **generated[name],
+            }
+    for name in extra:
+        schema.setdefault("properties", properties)[name] = generated[name]
+        if name in default.get("required", []):
+            schema.setdefault("required", []).append(name)
+    return schema
 
 
 class ConstraintErrors:
@@ -63,7 +128,9 @@ class SchemaModel(BaseModel):
       保留接口自己声明的附带字段；声明了 additionalProperties: false 的模型由生成的
       model_config 覆盖为 forbid；
     - serialize_by_alias / validate_by_name：输出用线上字段名（如 ErrorField 的 in），
-      Python 里也可以用字段名（in_）构造。
+      Python 里也可以用字段名（in_）构造；
+    - 导出的 JSON Schema（model_json_schema()、FastAPI 生成的 OpenAPI）就是源定义，
+      见 source_json_schema。
     """
 
     model_config = ConfigDict(
@@ -72,6 +139,12 @@ class SchemaModel(BaseModel):
         serialize_by_alias=True,
         validate_by_name=True,
     )
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        return source_json_schema(cls, core_schema, handler)
 
     @model_validator(mode="before")
     @classmethod
