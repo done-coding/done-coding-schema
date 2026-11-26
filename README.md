@@ -253,6 +253,6 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 |---|---|
 | `pnpm install`、`uv sync --project python` | 安装依赖 |
 | `pnpm gen` | 由 `schemas/` 生成两个包里的类型、模型与常量（生成物不手改） |
-| `pnpm check` | 样例校验、生成物一致、版本一致、两语言测试与构建产物检查 |
+| `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查 |
 
 发布流程见 [`docs/release.md`](docs/release.md)。

@@ -20,7 +20,7 @@ node -v && pnpm -v
 |---|---|
 | 安装依赖 | `pnpm install`（仅允许 pnpm）；Python 包另需 `uv sync --project python` |
 | 由定义生成各语言代码 | `pnpm gen` |
-| 全部检查 | `pnpm check`（样例校验、生成物一致、版本一致、类型检查、两语言测试、构建产物） |
+| 全部检查 | `pnpm check`（样例校验、生成物一致、版本一致、许可证副本一致、类型检查、两语言测试、构建产物） |
 | changelog | `pnpm log` |
 
 > 各子包的构建 / 测试也可在子包目录内单独执行；生成与跨包检查在仓根执行。

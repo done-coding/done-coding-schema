@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "跨前后端通用接口结构的 Pydantic 模型与常量"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["pydantic>=2.11,<3", "typing-extensions>=4.12"]
 

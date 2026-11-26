@@ -15,7 +15,7 @@
 
 1. 同步 master 到发布分支，`pnpm install`。
 2. `lerna version` 按约定式提交定出 npm 包的新版本（预发布用 `prerelease --preid alpha`）。仓根 `package.json` 的 `version` 生命周期脚本（`scripts/sync-python-version.mjs`）在提交前把同一版本写进 `python/pyproject.toml` 与 `python/uv.lock`，两个包的版本落在同一个版本提交和同一个标签上。
-3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、两语言测试、构建产物检查），任一不过即停，不上传任何包。
+3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、许可证副本一致、两语言测试、构建产物检查），任一不过即停，不上传任何包。
 4. 核对版本形态：正式版只接受 `X.Y.Z`，预发布只接受预发布版本。PyPI 没有 dist-tag，上传即成为可安装的版本，这一步防止把预发布当正式版上传。
 5. `lerna publish from-package` 上传 npm 包；`uv publish` 上传 Python 包（wheel 与 sdist）。
 6. 推送发布分支与标签（正式版另将 master 快进到 release、把 prerelease 重置到 master）。
