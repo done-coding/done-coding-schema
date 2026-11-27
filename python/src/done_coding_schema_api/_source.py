@@ -214,6 +214,7 @@ def check_added_fields(model: type[BaseModel]) -> None:
 
     - 源定义封闭（additionalProperties: false，除三种列表顶层外的结构都是）：不得新增；
     - 源定义允许附带字段（三种列表顶层）：可以新增，导出与运行时都按子类的声明认它；
+      但定义里写作 false 的名字（如页码式列表的 cursor）不得新增；
     - 查询参数模型（带 x-paramPrefix）：定义规定「前缀下未声明的参数不合法」，所以不得新增
       线上名落在本前缀下的字段；可以新增前缀外的字段（接口自己的其他查询参数），但线上名
       不得与本模型字段的裸名（page、pageSize 等）相同，免得同一个参数名两种解读。
@@ -259,6 +260,18 @@ def check_added_fields(model: type[BaseModel]) -> None:
                 f"同一个参数名会有两种解读：{'、'.join(clashes)}。换一个线上名。"
             )
         return
+    forbidden = [
+        f"{name}（{wire!r}）"
+        for name, wire in added.items()
+        if source.get("properties", {}).get(wire) is False
+    ]
+    if forbidden:
+        # 如一次性列表的 page、cursor：定义写明不得出现，子类加了，导出会把 false 覆盖成字段结构，
+        # 运行时又按定义拒收。
+        raise TypeError(
+            f"{model.__name__}：{generated_class.__name__} 的定义写明这些字段不得出现，"
+            f"子类不能新增：{'、'.join(forbidden)}。"
+        )
     if source.get("additionalProperties") is False:
         raise TypeError(
             f"{model.__name__}：{generated_class.__name__} 是封闭结构（定义不接受未声明的字段），"

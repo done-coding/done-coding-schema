@@ -17,7 +17,7 @@ from ._generated.list_filter import ListFilterCondition
 from ._generated.paged_list import PagedListPage
 from ._generated.paged_list_request import PagedListRequest
 from ._generated.service_error_codes import ServiceErrorCode
-from ._query import CursorListQuery, PagedListQuery
+from ._query import CursorListQuery, PagedListQuery, QueryInt
 from .models import (
     BoundedList,
     CursorList,
@@ -45,6 +45,7 @@ __all__ = [
     "PagedListPage",
     "PagedListQuery",
     "PagedListRequest",
+    "QueryInt",
     "ServiceErrorCode",
     "ServiceErrorCodes",
     "SuccessCode",

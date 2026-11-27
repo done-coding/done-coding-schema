@@ -24,6 +24,8 @@ from pydantic import (
 from pydantic.alias_generators import to_snake
 
 from done_coding_schema_api import (
+    BoundedList,
+    CursorList,
     CursorListCursor,
     CursorListRequest,
     ErrorBody,
@@ -659,3 +661,24 @@ def test_open_structure_fields_are_exported() -> None:
     inner = defs[outer["properties"]["items"]["items"]["$ref"].removeprefix("#/$defs/")]
     assert inner["properties"]["summary"] == {"$ref": "#/$defs/Summary"}
     assert "summary" in inner["required"]
+
+
+@pytest.mark.parametrize(
+    ("base", "field"),
+    [
+        (BoundedList, "page"),
+        (BoundedList, "cursor"),
+        (PagedList, "cursor"),
+        (CursorList, "page"),
+    ],
+)
+def test_open_lists_cannot_gain_fields_declared_false(
+    base: type[BaseModel], field: str
+) -> None:
+    # 列表顶层允许附带字段，但定义写明不得出现的名字不行（有默认值时输出本身就违反定义）。
+    with pytest.raises(TypeError, match=f"写明这些字段不得出现.*{field}"):
+        type(
+            "Extended",
+            (base,),
+            {"__annotations__": {field: dict[str, Any] | None}, field: {"x": 1}},
+        )

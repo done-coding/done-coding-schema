@@ -10,7 +10,7 @@ from done_coding_schema_api.reference import (
     find_reserved_codes,
 )
 
-STRUCTURE_ADDITIONS = {"JsonInt", "PagedListQuery", "CursorListQuery"}
+STRUCTURE_ADDITIONS = {"JsonInt", "PagedListQuery", "CursorListQuery", "QueryInt"}
 
 REFERENCE_NAMES = {
     "COMMON_ERROR_CODES",

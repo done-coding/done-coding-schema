@@ -19,9 +19,9 @@ import re
 from collections.abc import Callable, Mapping
 from copy import copy
 from functools import cache
-from typing import Any, NamedTuple
+from typing import Annotated, Any, NamedTuple
 
-from pydantic import ConfigDict, model_validator
+from pydantic import BeforeValidator, ConfigDict, Strict, model_validator
 
 from ._base import ConstraintErrors, SchemaModel
 from ._definitions import bundled_schema, source_of
@@ -54,6 +54,22 @@ def _rules(title: str) -> _Rules:
         ),
         integer_text=re.compile(definition["x-queryIntegerPattern"]),
     )
+
+
+def _query_integer(value: Any) -> Any:
+    """查询串里的整数：整串匹配定义的 x-queryIntegerPattern 才转成 int，其余原样（交给严格类型拒绝）。"""
+    if isinstance(value, str) and _rules("PagedListRequest").integer_text.search(value):
+        return int(value)
+    return value
+
+
+QueryInt = Annotated[int, BeforeValidator(_query_integer), Strict()]
+"""查询参数里的整数，规则与查询参数模型的整数参数相同（定义里的 x-queryIntegerPattern）。
+
+只收十进制数字串：``0`` 或不以 0 开头的数字，如 ``"20"`` → 20；``"02"``、``"+2"``、
+``" 2"``、``"2.0"``、``"1e1"``、空串都拒。用于查询参数模型子类里前缀外的整数参数，
+如 ``minAmount: QueryInt | None = None``，让同一接口里前缀内外的整数规则一致。
+"""
 
 
 def _wire_names_for(title: str) -> Callable[[str], str]:

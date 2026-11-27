@@ -12,6 +12,7 @@ from done_coding_schema_api import (
     CursorListQuery,
     JsonInt,
     PagedListQuery,
+    QueryInt,
     load_schema,
 )
 from done_coding_schema_api.reference import (
@@ -283,8 +284,8 @@ class OrderSearchQuery(PagedListQuery):
 
     pageSize: JsonInt = Field(default=20, le=50)
     status: str | None = None
-    # 查询串的值都是字符串；前缀外字段按自己的声明校验，整数要自己允许从字符串转换。
-    minAmount: Annotated[int | None, Field(strict=False, ge=0)] = None
+    # 查询串的值都是字符串；前缀外的整数用 QueryInt，与前缀内的整数同一套写法。
+    minAmount: Annotated[QueryInt | None, Field(ge=0)] = None
 
 
 def test_query_subclass_cannot_add_fields_under_the_prefix() -> None:
@@ -384,9 +385,48 @@ def test_fastapi_query_subclass_with_own_parameters() -> None:
     )
     for bad in (
         "minAmount=abc",
+        "minAmount=02",
+        "minAmount=%2B2",
+        "minAmount=2.0",
         "minAmount=-1",
         "page.pageSize=51",
         "pageSize=10",
         "page.foo=1",
     ):
         assert asyncio.run(_get(app, "/orders", bad))[0] == 422, bad
+
+
+# ---- QueryInt：前缀外的整数参数与前缀内同一套写法 ----
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [("0", 0), ("20", 20), ("100", 100)],
+)
+def test_query_int_accepts_plain_decimal(text: str, expected: int) -> None:
+    assert OrderSearchQuery.model_validate({"minAmount": text}).minAmount == expected
+
+
+@pytest.mark.parametrize(
+    "text", ["02", "+2", " 2", "2.0", "1e1", "", "-1", "٣", "2\n", "true"]
+)
+def test_query_int_rejects_what_prefixed_integers_reject(text: str) -> None:
+    for build in (
+        lambda: OrderSearchQuery.model_validate({"minAmount": text}),
+        lambda: PagedListQuery.model_validate({"page.page": text}),
+    ):
+        with pytest.raises(ValidationError):
+            build()
+
+
+def test_query_int_uses_the_definition_pattern() -> None:
+    from done_coding_schema_api import _query
+
+    assert (
+        _query._rules("PagedListRequest").integer_text.pattern
+        == load_schema("paged-list-request")["x-queryIntegerPattern"]
+    )
+    assert (
+        load_schema("cursor-list-request")["x-queryIntegerPattern"]
+        == load_schema("paged-list-request")["x-queryIntegerPattern"]
+    )
