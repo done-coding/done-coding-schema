@@ -4,33 +4,41 @@
 
 ## 触发
 
-| 合并请求合入 | 工作流 | 产出 |
-|---|---|---|
-| `release` 分支 | `.github/workflows/release-publish.yml` | 正式版：npm `latest`，PyPI 正式版本 |
-| `prerelease` 分支 | `.github/workflows/prerelease-publish.yml` | 预发布：npm `alpha` dist-tag（如 `1.0.1-alpha.0`），PyPI 预发布版本（如 `1.0.1a0`，`pip` 默认不会装到） |
+一个工作流 `.github/workflows/oidc-release.yml`，按合并请求合入的分支决定发什么：
+
+| 合并请求合入      | 产出                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `release` 分支    | 正式版：npm `latest`，PyPI 正式版本                                                                     |
+| `prerelease` 分支 | 预发布：npm `alpha` dist-tag（如 `1.0.1-alpha.0`），PyPI 预发布版本（如 `1.0.1a0`，`pip` 默认不会装到） |
+
+工作流取自 done-coding-template-hub 的 monorepo 模板，本仓在其上加了 Python 包的部分（文件头注释列出了差异）。
 
 ## 流程
 
-两个工作流的步骤相同，只是定版本的方式与上传目标不同：
+两个分支的步骤相同，只是定版本的方式与上传目标不同：
 
 1. 同步 master 到发布分支，`pnpm install`。
 2. `lerna version --force-publish` 按约定式提交定出 npm 包的新版本（预发布用 `prerelease --preid alpha`）；`--force-publish` 保证只改了 Python 包时也出版本，正式版另加 `--conventional-graduate` 让预发布版本转为正式版本，原因见「本机发布」第 1 步。仓根 `package.json` 的 `version` 生命周期脚本（`scripts/sync-python-version.mjs`）在提交前把同一版本写进 `python/pyproject.toml` 与 `python/uv.lock`，两个包的版本落在同一个版本提交和同一个标签上。
 3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、许可证副本一致、两语言测试、构建产物检查），再跑 `pnpm check:min-versions`（见下），任一不过即停，不上传任何包。
 4. 核对版本形态：正式版只接受 `X.Y.Z`，预发布只接受预发布版本。PyPI 没有 dist-tag，上传即成为可安装的版本，这一步防止把预发布当正式版上传。
-5. `lerna publish from-package` 上传 npm 包；`uv publish` 上传 Python 包（wheel 与 sdist）。
+5. `lerna publish from-package` 上传 npm 包；`uv publish --trusted-publishing always` 上传 Python 包（wheel 与 sdist）。两边都走可信发布，不用长期令牌。
 6. 推送发布分支与标签（正式版另将 master 快进到 release、把 prerelease 重置到 master）。
 
-## 凭据（维护者在托管平台上配置）
+## 前提（维护者在托管平台上配置）
 
-工作流只引用凭据，不读取、不打印。首次发布前需要：
+npm 与 PyPI 都用可信发布：工作流声明 `id-token: write`，上传时用 GitHub 签发的临时凭据，不存长期令牌，也不设 `NODE_AUTH_TOKEN` / `NPM_TOKEN` / `UV_PUBLISH_TOKEN`。缺下面任一项，上传以认证错误失败，不会改用别的凭据。
 
-| 凭据 | 在哪配 | 用途 |
-|---|---|---|
-| `NPM_TOKEN` | GitHub 仓库 Settings → Secrets and variables → Actions | 对 `@done-coding` 组织有发布权限的 npm 自动化令牌 |
-| `RELEASE_GITHUB_TOKEN` | 同上 | 推送发布分支、master 与标签 |
-| PyPI 可信发布 | PyPI 账号 → Publishing → 添加 GitHub 发布者（项目尚不存在时用「pending publisher」） | 项目名 `done-coding-schema-api`，Owner `done-coding`，仓库 `done-coding-schema`，工作流各登记一次：`release-publish.yml`、`prerelease-publish.yml`；Environment 留空。工作流已声明 `id-token: write`，`uv publish` 自动走可信发布，不需要长期令牌 |
+| 前提                   | 在哪配                                                                                                                    | 填什么                                                                                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| npm 可信发布           | npmjs.com 上 `@done-coding/schema-api` 的 Settings → Trusted Publisher → GitHub Actions                                   | Organization or user `done-coding`，Repository `done-coding-schema`，Workflow filename `oidc-release.yml`，Environment name 留空；Allowed actions 勾选 Allow npm publish（不勾则只能发到待审区，要人工批准），Allow npm dist-tag 不勾（dist-tag 在发包时一并设定） |
+| PyPI 可信发布          | PyPI 上项目 `done-coding-schema-api` 的 Manage → Publishing → 添加 GitHub 发布者（项目已存在，不用「pending publisher」） | 所有者 `done-coding`，存储库 `done-coding-schema`，工作流 `oidc-release.yml`，环境名称留空                                                                                                                                                                         |
+| `RELEASE_GITHUB_TOKEN` | GitHub 仓库 Settings → Secrets and variables → Actions                                                                    | 检出、推送发布分支与标签、快进 master；需要对这些分支的写权限                                                                                                                                                                                                      |
 
-不用可信发布时，改为在 PyPI 生成项目级 API 令牌，存为仓库密钥 `PYPI_TOKEN`，并在两个工作流的「Publish Python package」步骤加上 `env: UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}`。
+- 两边的登记都只写文件名，带扩展名，拼写与大小写须完全一致；改工作流文件名就要在两边重新登记。npm 的登记建好后不能修改，填错只能删掉重建。
+- 环境名称留空，因为工作流没有声明 `environment:`；登记里填了而工作流没有同名环境，上传会被拒。
+- npm 要求包的 `package.json` 里 `repository.url` 与该 GitHub 仓库一致（本仓写作 `https://github.com/done-coding/done-coding-schema.git`）。
+- 工具版本：npm 可信发布要求 npm 11.5.1 及以上、lerna 9（lerna 7 没有这部分实现）。工作流把 npm 升到 `NPM_VERSION`，仓里的 lerna 是 9.0.7。
+- 只在 GitHub 托管的 runner 上运行（不支持自托管 runner）。
 
 ## 本机演练（只构建，不上传）
 

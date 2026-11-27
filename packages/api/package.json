@@ -59,7 +59,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:done-coding/done-coding-schema.git"
+    "url": "https://github.com/done-coding/done-coding-schema.git"
   },
   "publishConfig": {
     "access": "public",

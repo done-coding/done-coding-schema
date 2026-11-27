@@ -43,7 +43,7 @@
     "eslint-plugin-vue": "^9.25.0",
     "husky": "^8.0.3",
     "json-schema-to-typescript": "16.0.0",
-    "lerna": "^7.3.0",
+    "lerna": "9.0.7",
     "lint-staged": "^12.5.0",
     "prettier": "^3.0.3",
     "typescript": "^5.8.3",
@@ -75,7 +75,8 @@
       "node scripts/check-versions.mjs"
     ]
   },
+  "packageManager": "pnpm@12.15.0",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   }
 }
