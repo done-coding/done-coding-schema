@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "list-reference-values.schema.json",
+  "title": "ListReferenceValues",
+  "description": "列表的参考数值（参考资源）：只是参考，不约束任何结构。结构定义里页码、每页条数、每批条数都没有默认值和上限，包不替使用方填写；要用这些数值须在自己的代码里显式引用，或声明自己的值。",
+  "x-referenceResource": true,
+  "x-referenceValues": {
+    "PAGED_LIST_REFERENCE_VALUES": {
+      "description": "页码式列表的参考数值：page 是请求不带页码时可参考的页码，pageSize 是请求不带每页条数时可参考的条数，maxPageSize 是每页条数可参考的上限。",
+      "value": {
+        "page": 1,
+        "pageSize": 10,
+        "maxPageSize": 100
+      }
+    },
+    "CURSOR_LIST_REFERENCE_VALUES": {
+      "description": "游标式列表的参考数值：maxLimit 是每批条数可参考的上限。",
+      "value": {
+        "maxLimit": 100
+      }
+    }
+  }
+}

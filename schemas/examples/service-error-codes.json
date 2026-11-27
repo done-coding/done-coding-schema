@@ -1,0 +1,1437 @@
+{
+  "valid": [
+    {
+      "name": "受理阶段的码",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "三种阶段、带其他状态",
+      "data": {
+        "service": "order-service-2",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          },
+          {
+            "code": "payment_timeout",
+            "stage": "execute",
+            "retryable": true,
+            "outcome": "unknown",
+            "meaning": "支付超时"
+          },
+          {
+            "code": "STOCK_SHORTAGE",
+            "stage": "both",
+            "httpStatus": 409,
+            "additionalHttpStatuses": [422, 503],
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "库存不足"
+          }
+        ]
+      }
+    },
+    {
+      "name": "大小写不同的同名码不算重复",
+      "data": {
+        "service": "a",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          },
+          {
+            "code": "order_locked",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "小写形式的保留码按字节比较不冲突",
+      "data": {
+        "service": "a",
+        "codes": [
+          {
+            "code": "http_404",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          },
+          {
+            "code": "invalid_request",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          },
+          {
+            "code": "ok",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HTTP_ 后不是数字",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "HTTP_X",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "code 含数字段",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_2_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "code 恰 128 字符",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "service 恰 64 字符",
+      "data": {
+        "service": "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    },
+    {
+      "name": "meaning 恰 1000 字符",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含"
+          }
+        ]
+      }
+    },
+    {
+      "name": "状态取边界值",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 400,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [599]
+          }
+        ]
+      }
+    },
+    {
+      "name": "状态写成值为整数的浮点（如 409.0）",
+      "data": {
+        "service": "order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "both",
+            "httpStatus": 409.0,
+            "additionalHttpStatuses": [423.0],
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定"
+          }
+        ]
+      }
+    },
+    {
+      "name": "专有码清单里出现 NOT_FOUND（结构不比通用码，要避开须显式检查）",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "NOT_FOUND",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": [
+        {
+          "code": "ORDER_LOCKED",
+          "stage": "accept",
+          "httpStatus": 409,
+          "retryable": false,
+          "outcome": "not_executed",
+          "meaning": "订单已锁定，不能修改"
+        }
+      ],
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "缺 service",
+      "data": {
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "service"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 codes",
+      "data": {
+        "service": "order-service"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "codes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "多出未声明字段",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ],
+        "version": 1
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "version"
+          }
+        }
+      ]
+    },
+    {
+      "name": "service 不是字符串",
+      "data": {
+        "service": 1,
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "service 含大写",
+      "data": {
+        "service": "Order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "service 以数字开头",
+      "data": {
+        "service": "1order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "service 含下划线",
+      "data": {
+        "service": "order_service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "service 超过 64 字符",
+      "data": {
+        "service": "sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "service 末尾换行",
+      "data": {
+        "service": "order\n",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/service",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "codes 不是数组",
+      "data": {
+        "service": "order-service",
+        "codes": {
+          "code": "ORDER_LOCKED",
+          "stage": "accept",
+          "httpStatus": 409,
+          "retryable": false,
+          "outcome": "not_executed",
+          "meaning": "订单已锁定，不能修改"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/codes",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "codes 为空",
+      "data": {
+        "service": "order-service",
+        "codes": []
+      },
+      "errors": [
+        {
+          "instancePath": "/codes",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "name": "清单内 code 重复",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          },
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "另一个"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/1/code",
+          "keyword": "x-uniqueItemsBy"
+        }
+      ]
+    },
+    {
+      "name": "codes 的项不是对象",
+      "data": {
+        "service": "order-service",
+        "codes": ["ORDER_LOCKED"]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "项缺 code",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "code"
+          }
+        }
+      ]
+    },
+    {
+      "name": "项缺 stage",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "stage"
+          }
+        }
+      ]
+    },
+    {
+      "name": "项缺 retryable",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "retryable"
+          }
+        }
+      ]
+    },
+    {
+      "name": "项缺 outcome",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "outcome"
+          }
+        }
+      ]
+    },
+    {
+      "name": "项缺 meaning",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "meaning"
+          }
+        }
+      ]
+    },
+    {
+      "name": "项多出未声明字段",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "owner": "me"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "owner"
+          }
+        }
+      ]
+    },
+    {
+      "name": "code 不是字符串",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": 409,
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "code 大小写混合",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "Order_Locked",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 含连续下划线",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER__LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 以下划线结尾",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 以下划线开头",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "_ORDER",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 以数字开头",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "1ORDER",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 含短横线",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER-LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 末尾换行",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED\n",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 超过 128 字符",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "code 为保留的 OK",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "OK",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "name": "code 为保留的 HTTP_<数字>",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "HTTP_404",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "name": "code 为 HTTP_<数字> 加末尾换行（格式不符，不算保留码）",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "HTTP_404\n",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "stage 取值不在范围内",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "sync",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/stage",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 低于 400",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 399,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 高于 599",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 600,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 不是整数",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": "409",
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 是布尔",
+      "data": {
+        "service": "order",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": true,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "httpStatus 显式为 null",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": null,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "accept 缺 httpStatus",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "httpStatus"
+          }
+        }
+      ]
+    },
+    {
+      "name": "both 缺 httpStatus",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "both",
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "httpStatus"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute 带 httpStatus",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "execute",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/httpStatus",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "execute 带 additionalHttpStatuses",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "execute",
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [409]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 不是数组",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": 422
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 为空",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": []
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 重复",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [422, 422]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 项低于 400",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [302]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses/0",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 项高于 599",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [600]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses/0",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 项不是整数",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": ["422"]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses/0",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "additionalHttpStatuses 含主状态",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改",
+            "additionalHttpStatuses": [422, 409]
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/additionalHttpStatuses",
+          "keyword": "x-arrayExcludesProperty"
+        }
+      ]
+    },
+    {
+      "name": "retryable 不是布尔",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": "no",
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/retryable",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "outcome 取值不在范围内",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "done",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/outcome",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "name": "meaning 不是字符串",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": 1
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/meaning",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "meaning 为空串",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": ""
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/meaning",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "name": "meaning 超过 1000 字符",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "ORDER_LOCKED",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含含"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/meaning",
+          "keyword": "maxLength"
+        }
+      ]
+    }
+  ]
+}

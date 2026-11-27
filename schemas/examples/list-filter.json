@@ -1,0 +1,198 @@
+{
+  "valid": [
+    {
+      "name": "不筛选",
+      "data": {}
+    },
+    {
+      "name": "按字符串筛选",
+      "data": {
+        "status": {
+          "eq": "active"
+        }
+      }
+    },
+    {
+      "name": "多个字段、各类标量",
+      "data": {
+        "count": {
+          "eq": 3
+        },
+        "enabled": {
+          "eq": true
+        },
+        "createdBy": {
+          "eq": "u1"
+        },
+        "ratio": {
+          "eq": 0.5
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": "status=active",
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "字段名不是小驼峰",
+      "data": {
+        "Status": {
+          "eq": "active"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "Status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "字段名含下划线",
+      "data": {
+        "created_by": {
+          "eq": "u1"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "created_by"
+          }
+        }
+      ]
+    },
+    {
+      "name": "字段名含点号",
+      "data": {
+        "status.x": {
+          "eq": "a"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "status.x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "字段名末尾换行",
+      "data": {
+        "status\n": {
+          "eq": "active"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "status\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "字段上不是条件对象",
+      "data": {
+        "status": "active"
+      },
+      "errors": [
+        {
+          "instancePath": "/status",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "条件对象为空",
+      "data": {
+        "status": {}
+      },
+      "errors": [
+        {
+          "instancePath": "/status",
+          "keyword": "minProperties"
+        }
+      ]
+    },
+    {
+      "name": "未声明的操作",
+      "data": {
+        "status": {
+          "ne": "active"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/status",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "ne"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eq 的值为 null",
+      "data": {
+        "status": {
+          "eq": null
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/status/eq",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "eq 的值为数组",
+      "data": {
+        "status": {
+          "eq": ["a", "b"]
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/status/eq",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "eq 的值为对象",
+      "data": {
+        "status": {
+          "eq": {
+            "a": 1
+          }
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/status/eq",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

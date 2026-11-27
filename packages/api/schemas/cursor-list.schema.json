@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cursor-list.schema.json",
+  "title": "CursorList",
+  "description": "游标式列表，作成功外壳的 data：消息流这类接着往下取的列表，不带总数。取数方向由各接口声明。顶层允许接口自己声明的附带字段，但不得重复表达翻页信息；不带 page。",
+  "x-pathConstants": "CURSOR_LIST_RESPONSE_PATHS",
+  "type": "object",
+  "properties": {
+    "items": {
+      "description": "本批数据。",
+      "type": "array"
+    },
+    "cursor": { "$ref": "#/$defs/cursor" },
+    "page": false
+  },
+  "required": ["items", "cursor"],
+  "$defs": {
+    "cursor": {
+      "title": "CursorListCursor",
+      "description": "接着取的位置。hasMore 为 true 时必须给 next。",
+      "type": "object",
+      "properties": {
+        "next": {
+          "description": "下一批的游标，对调用方不透明，1–1024 个字符；没有更多时可省略。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "hasMore": {
+          "description": "是否还有更多。",
+          "type": "boolean"
+        }
+      },
+      "required": ["hasMore"],
+      "additionalProperties": false,
+      "if": {
+        "properties": { "hasMore": { "const": true } },
+        "required": ["hasMore"]
+      },
+      "then": {
+        "required": ["next"]
+      }
+    }
+  }
+}

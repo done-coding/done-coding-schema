@@ -1,0 +1,86 @@
+{
+  "name": "@done-coding/schema-api",
+  "version": "0.0.1-alpha.4",
+  "description": "跨前后端通用接口结构的类型、常量与定义文件",
+  "private": false,
+  "main": "lib/index.cjs",
+  "module": "es/index.mjs",
+  "types": "types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "reference": [
+        "types/reference.d.ts"
+      ]
+    }
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./es/index.mjs"
+      },
+      "require": {
+        "types": "./types/index.d.cts",
+        "default": "./lib/index.cjs"
+      }
+    },
+    "./reference": {
+      "import": {
+        "types": "./types/reference.d.ts",
+        "default": "./es/reference.mjs"
+      },
+      "require": {
+        "types": "./types/reference.d.cts",
+        "default": "./lib/reference.cjs"
+      }
+    },
+    "./schemas/*": "./schemas/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "es",
+    "lib",
+    "types",
+    "schemas"
+  ],
+  "scripts": {
+    "serve": "vite",
+    "predev": "dc-inject",
+    "dev": "vite build -w -m hotBuild",
+    "prebuild": "dc-inject",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "prepack": "pnpm build",
+    "log": "conventional-changelog -p angular -i CHANGELOG.md -s --release-count 0",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "push": "dc-publish -m npm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/done-coding/done-coding-schema.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "JustSoSu",
+  "license": "MIT",
+  "sideEffects": false,
+  "devDependencies": {
+    "@done-coding/cli-inject": "^0.6.6",
+    "@done-coding/cli-publish": "^0.8.6",
+    "@types/node": "^18.0.0",
+    "@vitest/coverage-istanbul": "^1.6.1",
+    "conventional-changelog": "^5.1.0",
+    "conventional-changelog-cli": "^4.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^5.0.10",
+    "vite-plugin-dts": "^3.7.0",
+    "vitest": "^1.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

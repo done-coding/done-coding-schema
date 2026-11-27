@@ -1,0 +1,165 @@
+{
+  "valid": [
+    {
+      "name": "首批都不带",
+      "data": {}
+    },
+    {
+      "name": "首批只带 limit",
+      "data": {
+        "limit": 20
+      }
+    },
+    {
+      "name": "接着取",
+      "data": {
+        "after": "eyJpZCI6MX0",
+        "limit": 100
+      }
+    },
+    {
+      "name": "after 恰 1024 字符",
+      "data": {
+        "after": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "limit": 1
+      }
+    },
+    {
+      "name": "limit 写成值为整数的浮点（20.0）",
+      "data": {
+        "limit": 20.0
+      }
+    },
+    {
+      "name": "limit 500（结构不设上限）",
+      "data": {
+        "limit": 500
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": 20,
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "前缀下出现未声明的参数",
+      "data": {
+        "limit": 20,
+        "before": "x"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "before"
+          }
+        }
+      ]
+    },
+    {
+      "name": "after 不是字符串",
+      "data": {
+        "after": 1
+      },
+      "errors": [
+        {
+          "instancePath": "/after",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "首批 after 显式为 null",
+      "data": {
+        "after": null,
+        "limit": 20
+      },
+      "errors": [
+        {
+          "instancePath": "/after",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "after 为空串",
+      "data": {
+        "after": ""
+      },
+      "errors": [
+        {
+          "instancePath": "/after",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "name": "after 超过 1024 字符",
+      "data": {
+        "after": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "errors": [
+        {
+          "instancePath": "/after",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "limit 为 0",
+      "data": {
+        "limit": 0
+      },
+      "errors": [
+        {
+          "instancePath": "/limit",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "name": "limit 不是整数",
+      "data": {
+        "limit": 2.5
+      },
+      "errors": [
+        {
+          "instancePath": "/limit",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "limit 未解码成整数",
+      "data": {
+        "limit": "20"
+      },
+      "errors": [
+        {
+          "instancePath": "/limit",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "limit 是布尔",
+      "data": {
+        "limit": true
+      },
+      "errors": [
+        {
+          "instancePath": "/limit",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

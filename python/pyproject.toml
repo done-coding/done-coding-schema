@@ -1,0 +1,37 @@
+[project]
+name = "done-coding-schema-api"
+version = "0.0.1a4"
+description = "跨前后端通用接口结构的 Pydantic 模型与常量"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["pydantic>=2.11,<3", "typing-extensions>=4.12"]
+
+[project.urls]
+Repository = "https://github.com/done-coding/done-coding-schema"
+
+[dependency-groups]
+dev = [
+  "datamodel-code-generator==0.92.0",
+  "fastapi==0.162.5",
+  "jsonschema==4.26.0",
+  "pytest==9.2.0",
+  "ruff==0.16.9",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv]
+# 只引入发布满 14 天的版本（含传递依赖）。
+exclude-newer = "14 days"
+
+[tool.ruff]
+target-version = "py310"
+# 生成物由 pnpm gen 产出并格式化，由一致性检查把关，不再 lint。
+extend-exclude = ["src/done_coding_schema_api/_generated"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

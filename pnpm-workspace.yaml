@@ -7,3 +7,10 @@ packages:
 allowBuilds:
   esbuild: true
   vue-demi: true
+  # 以下依赖的构建脚本本仓用不到（lerna / 模板工具链的可选原生件），显式不构建。
+  '@parcel/watcher': false
+  nodejieba: false
+  nx: false
+
+# 只引入发布满 14 天的版本（含传递依赖），单位：分钟。
+minimumReleaseAge: 20160
