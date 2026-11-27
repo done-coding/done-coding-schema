@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bounded-list.schema.json",
+  "title": "BoundedList",
+  "description": "一次性列表，作成功外壳的 data。只用于条数有一个由定义决定、不随业务数据增长的上限的结果（如下拉选项）；上限由各接口在自己的契约里声明，超过上限报 LIST_LIMIT_EXCEEDED，不截断。顶层允许接口自己声明的附带字段，但不得带翻页信息。",
+  "x-pathConstants": "BOUNDED_LIST_RESPONSE_PATHS",
+  "type": "object",
+  "properties": {
+    "items": {
+      "description": "列表数据。",
+      "type": "array"
+    },
+    "page": false,
+    "cursor": false
+  },
+  "required": ["items"]
+}

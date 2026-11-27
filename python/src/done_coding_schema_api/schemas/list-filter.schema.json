@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "list-filter.schema.json",
+  "title": "ListFilter",
+  "description": "列表的筛选参数。线上写作 filter.<字段>.<操作>（如 filter.status.eq=active），本定义约束解码后的对象 {<字段>: {<操作>: 值}}；字段为小驼峰，可筛选哪些字段由接口自己声明。首版操作只有 eq。前缀下未声明的参数不合法。",
+  "x-paramPrefix": "filter",
+  "x-pathConstants": "LIST_FILTER_PARAMS",
+  "type": "object",
+  "patternProperties": {
+    "^[a-z][a-zA-Z0-9]*$(?![\\s\\S])": { "$ref": "#/$defs/condition" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "condition": {
+      "title": "ListFilterCondition",
+      "description": "一个字段上的筛选条件，至少一个操作。",
+      "type": "object",
+      "properties": {
+        "eq": {
+          "description": "等于；值为标量。",
+          "type": ["string", "number", "boolean"]
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  }
+}

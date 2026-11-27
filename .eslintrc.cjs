@@ -68,6 +68,8 @@ module.exports = {
     "**/index.html",
     // 生成物不检：类型声明（含 unplugin 自动生成的 auto-imports / components.d.ts）与 OpenAPI 生成的 SDK 类型
     "**/*.d.ts",
-    "**/sdk/src/schemas/**"
+    "**/sdk/src/schemas/**",
+    // 由 schemas/ 的定义生成的类型、常量与定义模块（pnpm gen）
+    "packages/*/src/generated/**"
   ],
 };

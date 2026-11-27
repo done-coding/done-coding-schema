@@ -1,8 +1,8 @@
-# AI 指令 — template-monorepo
+# AI 指令 — done-coding-schema
 
 ## 定位
 
-pnpm workspace monorepo 容器模板（根统一 husky / lint / changelog，子包各自构建）。
+跨前后端通用接口结构的定义与各语言契约包：一份 JSON Schema 定义，生成并发布 npm 包与 PyPI 包。pnpm workspace monorepo（根统一 husky / lint / changelog，子包各自构建）；目标、范围与边界见 `docs/PROJECT.md`。
 
 ## 包管理器
 
@@ -18,10 +18,12 @@ node -v && pnpm -v
 
 | 命令 | 脚本 |
 |---|---|
-| 安装依赖 | `pnpm install`（仅允许 pnpm） |
+| 安装依赖 | `pnpm install`（仅允许 pnpm）；Python 包另需 `uv sync --project python` |
+| 由定义生成各语言代码 | `pnpm gen` |
+| 全部检查 | `pnpm check`（样例校验、生成物一致、版本一致、许可证副本一致、类型检查、两语言测试、构建产物） |
 | changelog | `pnpm log` |
 
-> 容器仓：构建 / 测试 / lint 在各子包目录内执行，根仅托管工程化件。
+> 各子包的构建 / 测试也可在子包目录内单独执行；生成与跨包检查在仓根执行。
 
 ---
 
@@ -59,7 +61,10 @@ node -v && pnpm -v
 
 ### 项目专属规则（从 6 开始）
 
-<!-- 在此添加项目规则，从第 6 条开始 -->
+6. [MUST NOT] 在文档、提交说明、代码与流程文件里写不公开的项目名、本机路径或内部编号——本仓与发布的包都公开。
+7. [MUST] 类型、模型与常量一律由 `schemas/` 的定义生成；[MUST NOT] 手改生成物。
+8. [MUST NOT] 自行改动已定结构的字段名、取值范围或增减结构——先写下改什么、为什么、影响谁，由维护者决定。
+9. [MUST NOT] 在 master 上直接改、自行 push 或自行发布。
 
 ---
 
