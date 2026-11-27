@@ -117,6 +117,8 @@ jobs:
       # 关键参数：
       #   prerelease          使用 prerelease 版本策略（如 1.0.0 → 1.0.1-alpha.0）
       #   --preid alpha        预发布标识符前缀
+      #   --force-publish      两个包共用一个版本号：只改了 Python 包时 lerna 会判 npm 包
+      #                        「无变化」而不出版本，发布就此停住；加上它，任一边有改动都一起出版本
       #   --yes                跳过所有交互式确认
       #   --no-push            禁止 Lerna 自动推送，由我们手动控制推送时机
       #   --message            自定义版本提交信息，包含 [skip ci] 防止循环触发
@@ -126,7 +128,7 @@ jobs:
       # --------------------------------------------------------
       - name: Version packages (no push)
         run: |
-          npx lerna version prerelease --yes --preid alpha --no-push --message "chore(prerelease): publish [skip ci]"
+          npx lerna version prerelease --force-publish --yes --preid alpha --no-push --message "chore(prerelease): publish [skip ci]"
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 

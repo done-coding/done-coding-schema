@@ -14,7 +14,7 @@
 两个工作流的步骤相同，只是定版本的方式与上传目标不同：
 
 1. 同步 master 到发布分支，`pnpm install`。
-2. `lerna version` 按约定式提交定出 npm 包的新版本（预发布用 `prerelease --preid alpha`）。仓根 `package.json` 的 `version` 生命周期脚本（`scripts/sync-python-version.mjs`）在提交前把同一版本写进 `python/pyproject.toml` 与 `python/uv.lock`，两个包的版本落在同一个版本提交和同一个标签上。
+2. `lerna version --force-publish` 按约定式提交定出 npm 包的新版本（预发布用 `prerelease --preid alpha`）；`--force-publish` 保证只改了 Python 包时也出版本，正式版另加 `--conventional-graduate` 让预发布版本转为正式版本，原因见「本机发布」第 1 步。仓根 `package.json` 的 `version` 生命周期脚本（`scripts/sync-python-version.mjs`）在提交前把同一版本写进 `python/pyproject.toml` 与 `python/uv.lock`，两个包的版本落在同一个版本提交和同一个标签上。
 3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、许可证副本一致、两语言测试、构建产物检查），任一不过即停，不上传任何包。
 4. 核对版本形态：正式版只接受 `X.Y.Z`，预发布只接受预发布版本。PyPI 没有 dist-tag，上传即成为可安装的版本，这一步防止把预发布当正式版上传。
 5. `lerna publish from-package` 上传 npm 包；`uv publish` 上传 Python 包（wheel 与 sdist）。
@@ -53,10 +53,14 @@ uv build --project python --out-dir <输出目录>
 
    ```bash
    # 预发布
-   npx lerna version prerelease --yes --preid alpha --no-push --message "chore(prerelease): publish [skip ci]"
+   npx lerna version prerelease --force-publish --yes --preid alpha --no-push --message "chore(prerelease): publish [skip ci]"
+   # 正式版
+   npx lerna version --force-publish --conventional-graduate --yes --no-push --message "chore(release): publish [skip ci]"
    ```
 
    `version` 生命周期脚本会把同一版本同步给 Python 包，并放进同一个版本提交。
+
+   `--force-publish` 不能省：两个包共用一个版本号，只改了 Python 包时 lerna 会判 npm 包「无变化」而不出版本，发布就此停住。加上它，任一边有改动都两个包一起出版本。这时 npm 包的 CHANGELOG 记为「Version bump only」（对 npm 包属实），这一版的改动看同一版本区间的提交记录。正式版的 `--conventional-graduate` 让当前的预发布版本（如 `0.0.1-alpha.4`）转为正式版本（`0.0.1`）；不加时约定式提交只会把预发布号加一（`0.0.1-alpha.5`），版本形态检查会拒绝。当前已是正式版本时它不起作用。
 
 2. `pnpm check` 全过；按上一节构建到仓外的输出目录，核对两包版本相同、都带 `LICENSE`、文件清单没有意外增减。
 
