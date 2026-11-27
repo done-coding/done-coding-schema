@@ -141,7 +141,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 - **三种列表靠顶层字段互相区分**：页码式顶层不得带 `cursor`，游标式不得带 `page`，一次性列表两者都不得带。同一份数据只能是其中一种，调用方不用猜。
 - **错误体的 `code` 不能是 `OK`**：`OK` 是成功码，失败响应用它会让只看 `code` 的调用方误判。
 - **字段错误的 `message` 最长 1000 个字符**：与其他说明字段一致；更长的补充说明放错误体的 `detail`。
-- **字段指针整串匹配，末尾带换行不合法**：定义里的正则按 ECMA-262 语义，`$` 只匹配文本末尾；Python 包也按这个语义判，不沿用 Python `re` 里 `$` 可匹配末尾换行之前的行为。
+- **带格式的字段整串匹配，末尾带换行不合法**：定义里以 `$` 收尾的正则都写成 `$(?![\s\S])`，在 ECMA-262 与 Python 的 `re` 下都只匹配真正的文本结尾（Python 的 `$` 本来会放过结尾一个换行）；「不能是纯空白」「不含空白」用按 ECMA-262 列明的空白字符类，不用各引擎各有出入的 `\S`。所以 Ajv、Python 的 jsonschema 等任何 JSON Schema 2020-12 校验器拿定义文件直接判，与包的模型结论相同（`x-` 检查关键字除外，见下一节）。
 
 通用失败码的 `retryable` 与 `outcome` 不在此列：码表给的是参考值，包不替使用方填写（见上文「业务码」）。
 
@@ -189,48 +189,34 @@ class AuditPageRequest(PagedListRequest):
 
 `OrderPageRequest.model_json_schema()`，以及 FastAPI 用它作请求体或返回类型时生成的 OpenAPI，导出的是定义与子类声明的交集：`pageSize` 带上 `default: 20`、`maximum: 50`，定义里的说明与 `minimum: 1` 保留。运行时的校验与导出的结构结论相同：导出写着的约束都会执行。
 
-**用作查询参数**（FastAPI）：线上参数名要用定义规定的 `page.page`、`page.pageSize`、`page.query`、`page.orderBy`（即 `PAGED_LIST_REQUEST_PARAMS`），不是字段名；游标式同理用 `CURSOR_LIST_REQUEST_PARAMS`（`cursor.after`、`cursor.limit`）。查询参数都是字符串，整数参数要先解码再按定义校验：
+**用作查询参数**（Python）：用包里内置的查询参数模型 `PagedListQuery`、`CursorListQuery`，线上名与解码都已写好：
+
+- 线上名固定为「前缀.字段名」：`page.page`、`page.pageSize`、`page.query`、`page.orderBy`、`cursor.after`、`cursor.limit`；裸名（如 `pageSize`）不收，前缀外的参数不归它管，前缀下未声明的参数（如 `page.limit`）不合法；
+- 整数参数只收十进制数字串（定义里的 `x-queryIntegerPattern`：`0` 或不以 0 开头的数字），解码后再按定义的上下界校验；`02`、`+2`、` 2`、`2.0`、`1e1`、空串都拒；
+- 继承它声明自己的默认值与上限，规则同上（子类只能收紧），不必再写别名与解码。
 
 ```python
-import re
 from typing import Annotated, Any
 
 from fastapi import FastAPI, Query
-from pydantic import ConfigDict, model_validator
+from pydantic import Field
 
-from done_coding_schema_api.reference import PAGED_LIST_REQUEST_PARAMS
-
-INTEGER_PARAMS = {PAGED_LIST_REQUEST_PARAMS["page"], PAGED_LIST_REQUEST_PARAMS["pageSize"]}
+from done_coding_schema_api import JsonInt, PagedListQuery
 
 
-class OrderPageQuery(OrderPageRequest):
-    model_config = ConfigDict(
-        alias_generator=lambda name: PAGED_LIST_REQUEST_PARAMS[name],  # 线上参数名
-        validate_by_name=False,  # 只认线上参数名
-    )
-
-    @model_validator(mode="before")
-    @classmethod
-    def _decode_integers(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            return {
-                key: int(value)
-                if key in INTEGER_PARAMS and isinstance(value, str) and re.fullmatch("[0-9]+", value)
-                else value
-                for key, value in data.items()
-            }
-        return data
+class OrderQuery(PagedListQuery):
+    pageSize: JsonInt = Field(default=20, le=50)
 
 
 app = FastAPI()
 
 
 @app.get("/orders")
-def list_orders(params: Annotated[OrderPageQuery, Query()]) -> dict[str, Any]:
-    return params.model_dump(exclude_none=True)  # ?page.pageSize=30 → {"page.pageSize": 30}
+def list_orders(params: Annotated[OrderQuery, Query()]) -> dict[str, Any]:
+    return {"page": params.page, "pageSize": params.pageSize}  # ?page.page=2 → {"page": 2, "pageSize": 20}
 ```
 
-OpenAPI 里的参数名就是 `page.page` 等四个；`page.pageSize=0`、`=51`、`=abc`、前缀下未声明的参数都返回 422。参数各自的类型与范围由 FastAPI 按字段声明逐个展开：子类写出的默认值与上限看得到，定义里的下限不显示（运行时照常检查）。
+FastAPI 生成的 OpenAPI 里，参数名就是上面的线上名；每个参数的说明取自定义与子类声明的交集，约束写成 `minimum` / `maximum`，可选参数不写成可为 null。FastAPI 0.140 等较早的版本里，查询参数模型要是接口唯一的查询参数才会展开成各个参数。不用 FastAPI 时，把查询串解析成「参数名 → 字符串」的映射后交给 `OrderQuery.model_validate(...)` 即可。
 
 **每页条数的默认值与上限**（TypeScript）：类型只描述结构，取值由自己的代码决定：
 
@@ -285,6 +271,8 @@ if hits:
 ```bash
 npm install @done-coding/schema-api
 ```
+
+预发布版用 `npm install @done-coding/schema-api@alpha` 安装。TypeScript 的 `moduleResolution` 取 `node`（node10）、`node16` / `nodenext`（CommonJS 与 ES 模块项目都行）、`bundler` 都能解析主入口与 `/reference` 子路径的类型。
 
 类型（成功外壳与三种列表可带元素类型）从主入口取，字段路径、参数名与码表从参考资源出口取：
 
@@ -382,7 +370,7 @@ print(PAGED_LIST_REQUEST_PARAMS["pageSize"])  # page.pageSize
 
 输出用线上字段名（如出错字段的 `in`，Python 里的属性名是 `in_`）；列表顶层的附带字段原样保留。
 
-**校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。
+**校验报错指到具体字段**：如 `totalPage` 不对时位置是 `("page", "totalPage")`，嵌在成功外壳里则是 `("data", "page", "totalPage")`；「不得出现」的字段指到多出来的那个，如页码式列表带了 `cursor` 时是 `("cursor",)`。页码式列表的条数超限分两种错误类型：`items_exceed_page_size`（超过 `pageSize`）与 `items_exceed_total_record`（超过 `totalRecord`），定义校验器的报错在 `params.errorType` 里给出同样的名字。
 
 **导出的 JSON Schema 就是定义本身**：`model_json_schema()` 以及 FastAPI 用 `response_model` 生成的 OpenAPI，导出的都是对应的定义（引用已展开，`x-` 约束原样带出），可选字段不会被写成可为 `null`。泛型只替换参数处：`PagedList[User]` 与 `class UserPage(PagedList[User])` 的 `items` 元素是 `User`，`SuccessEnvelope[X]` 的 `data` 是 `X`。子类重新声明已有字段（加上限、加默认、收窄类型；查询参数模型还可以按前缀改线上名）时，导出的是定义与子类声明的交集，运行时同样两者都检查，见「使用方怎样显式声明自己的配置」。
 
@@ -419,6 +407,6 @@ load_reference_schema("common-error-codes")["title"]  # 'CommonErrorCodes'
 | `pnpm gen` | 由 `schemas/` 生成两个包里的类型、模型与常量（生成物不手改） |
 | `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查（含 wheel 与 sdist 里的定义文件） |
 
-**两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（`python/tests/test_examples.py`，JSON 与 Python 两种输入都测）。两边结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码配任意 `retryable` / `outcome`、每页条数 500、专有码与通用码同名这类边界。
+**两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（JSON 与 Python 两种输入都测），再由 Python 的通用校验器 jsonschema 直接拿包里的定义文件判（只因 `x-` 检查关键字被拒的样例，它判合法才算一致）；后两者在 `python/tests/test_examples.py`。三方结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码配任意 `retryable` / `outcome`、每页条数 500、专有码与通用码同名这类边界。
 
 发布流程见 [`docs/release.md`](docs/release.md)。
