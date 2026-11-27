@@ -571,3 +571,91 @@ def test_unrelated_nested_model_is_still_intersected() -> None:
     assert error["$ref"] == "#/$defs/Detail"
     assert error["additionalProperties"] is False
     assert set(error["required"]) == {"retryable", "outcome"}
+
+
+# ---- 子类新增字段：以源定义的开放性为准 ----
+
+
+@pytest.mark.parametrize(
+    ("base", "field"),
+    [(ErrorBody, "hint"), (ErrorField, "hint"), (PagedListPage, "page")],
+)
+def test_closed_structures_cannot_gain_fields(
+    base: type[BaseModel], field: str
+) -> None:
+    with pytest.raises(TypeError, match=f"是封闭结构.*子类不能新增字段：{field}"):
+        type("Extended", (base,), {"__annotations__": {field: str | None}, field: None})
+
+
+class Summary(BaseModel):
+    """使用方自己的模型；要与导出同结论，它自己也得严格（宽松模型会把 "1" 转成 1）。"""
+
+    model_config = ConfigDict(strict=True)
+
+    count: int
+
+
+class SummaryPage(PagedList[User]):
+    """开放结构（列表顶层允许附带字段）：接口自己声明的 summary。"""
+
+    summary: Summary
+
+
+class Outer(PagedList[SummaryPage]):
+    """三层：列表的元素又是带附带字段的列表。"""
+
+    note: str | None = None
+
+
+def _summary_page(count: Any) -> dict[str, Any]:
+    return {
+        "items": [{"id": "u1"}],
+        "page": {"totalRecord": 1, "pageSize": 10, "totalPage": 1},
+        "summary": {"count": count},
+    }
+
+
+OPEN_CASES: list[tuple[type[BaseModel], Any]] = [
+    (SummaryPage, _summary_page(1)),
+    (SummaryPage, _summary_page("1")),
+    (SummaryPage, {k: v for k, v in _summary_page(1).items() if k != "summary"}),
+    (SummaryPage, {**_summary_page(1), "other": True}),
+    *(
+        (
+            SuccessEnvelope[Outer],
+            {
+                "code": "OK",
+                "message": "",
+                "data": {
+                    "items": [inner],
+                    "page": {"totalRecord": 1, "pageSize": 10, "totalPage": 1},
+                    "note": note,
+                },
+            },
+        )
+        for inner in (_summary_page(1), _summary_page("x"))
+        for note in ("n", 1)
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("model", "data"),
+    OPEN_CASES,
+    ids=[f"{model.__name__}:{i}" for i, (model, _) in enumerate(OPEN_CASES)],
+)
+def test_open_structure_fields_agree_between_export_and_runtime(
+    model: type[BaseModel], data: Any
+) -> None:
+    exported = Draft202012Validator(model.model_json_schema()).is_valid(data)
+    assert _model_accepts(model, data) is exported
+
+
+def test_open_structure_fields_are_exported() -> None:
+    exported = SuccessEnvelope[Outer].model_json_schema()
+    defs = exported["$defs"]
+    outer = defs[exported["properties"]["data"]["$ref"].removeprefix("#/$defs/")]
+    assert "note" in outer["properties"]
+    inner = defs[outer["properties"]["items"]["items"]["$ref"].removeprefix("#/$defs/")]
+    assert inner["properties"]["summary"] == {"$ref": "#/$defs/Summary"}
+    assert "summary" in inner["required"]

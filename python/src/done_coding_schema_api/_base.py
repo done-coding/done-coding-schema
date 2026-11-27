@@ -16,6 +16,7 @@ from pydantic_core import CoreSchema, InitErrorDetails, PydanticCustomError
 
 from ._source import (
     adopt_source_integers,
+    check_added_fields,
     check_wire_names,
     integral_float_to_int,
     source_constraint_errors,
@@ -82,8 +83,10 @@ class SchemaModel(BaseModel):
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
         super().__pydantic_init_subclass__(**kwargs)
-        # 包体结构的子类不得改线上字段名，类定义时就报错（见 _source.check_wire_names）。
+        # 子类不得随意改线上字段名，类定义时就报错（见 _source.check_wire_names）。
         check_wire_names(cls)
+        # 能不能新增字段以源定义为准（见 _source.check_added_fields）。
+        check_added_fields(cls)
 
     @classmethod
     def __get_pydantic_json_schema__(

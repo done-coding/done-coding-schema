@@ -209,6 +209,64 @@ def check_wire_names(model: type[BaseModel]) -> None:
     )
 
 
+def check_added_fields(model: type[BaseModel]) -> None:
+    """子类新增字段（源定义里没有的字段）以源定义为准，在类定义时报错。
+
+    - 源定义封闭（additionalProperties: false，除三种列表顶层外的结构都是）：不得新增；
+    - 源定义允许附带字段（三种列表顶层）：可以新增，导出与运行时都按子类的声明认它；
+    - 查询参数模型（带 x-paramPrefix）：定义规定「前缀下未声明的参数不合法」，所以不得新增
+      线上名落在本前缀下的字段；可以新增前缀外的字段（接口自己的其他查询参数），但线上名
+      不得与本模型字段的裸名（page、pageSize 等）相同，免得同一个参数名两种解读。
+    """
+    generated_class = _generated_class(model)
+    if (
+        generated_class is None
+        or generated_class is model
+        or issubclass(model, RootModel)
+    ):
+        return
+    originals = generated_class.__pydantic_fields__
+    added = {
+        name: _wire_name(name, field)
+        for name, field in model.__pydantic_fields__.items()
+        if name not in originals
+    }
+    if not added:
+        return
+    source = bundled_schema(*source_of(generated_class.__name__))  # type: ignore[misc]
+    prefix = source.get("x-paramPrefix")
+    if prefix:
+        inside = [
+            f"{name}（{wire!r}）"
+            for name, wire in added.items()
+            if wire.startswith(f"{prefix}.")
+        ]
+        if inside:
+            raise TypeError(
+                f"{model.__name__}：{generated_class.__name__} 是查询参数模型，定义规定前缀 {prefix}. "
+                f"下未声明的参数不合法，子类不能新增这个前缀下的字段：{'、'.join(inside)}。"
+                "接口自己的其他查询参数可以加，线上名放在前缀之外。"
+            )
+        bare = {_wire_name(name, field) for name, field in originals.items()}
+        clashes = [
+            f"{name}（{wire!r} 应写作 {prefix + '.' + wire!r}）"
+            for name, wire in added.items()
+            if wire in bare
+        ]
+        if clashes:
+            raise TypeError(
+                f"{model.__name__}：新增字段的线上名与 {generated_class.__name__} 字段的裸名相同，"
+                f"同一个参数名会有两种解读：{'、'.join(clashes)}。换一个线上名。"
+            )
+        return
+    if source.get("additionalProperties") is False:
+        raise TypeError(
+            f"{model.__name__}：{generated_class.__name__} 是封闭结构（定义不接受未声明的字段），"
+            f"子类不能新增字段：{'、'.join(added)}。"
+            "只有三种列表的顶层（BoundedList、PagedList、CursorList）允许接口自己声明附带字段。"
+        )
+
+
 # ---- 运行时：重新声明的字段仍要满足源定义 ----
 
 _ADAPTERS: "WeakKeyDictionary[type[BaseModel], dict[str, TypeAdapter[Any]]]" = (

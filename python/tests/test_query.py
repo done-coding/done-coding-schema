@@ -95,8 +95,8 @@ def test_decoded_integers_are_checked_against_bounds(text: str, ok: bool) -> Non
 
 
 def test_prefix_rules() -> None:
-    # 前缀外的参数不归它管，忽略；裸名不收；前缀下未声明的参数不合法。
-    assert PagedListQuery.model_validate({"q": "x", "pageSize": "20"}).pageSize is None
+    # 前缀外的参数不归它管，忽略；前缀下未声明的参数不合法。
+    assert PagedListQuery.model_validate({"q": "x", "limit": "20"}).pageSize is None
     with pytest.raises(ValidationError) as caught:
         PagedListQuery.model_validate({"page.limit": "1"})
     assert caught.value.errors()[0]["loc"] == ("page.limit",)
@@ -224,9 +224,13 @@ def test_fastapi_requests() -> None:
         200,
         {"cursor.after": "abc", "cursor.limit": 5},
     )
-    # 裸名不收（被忽略，取默认）；严格整数写法以外的都拒。
-    assert asyncio.run(_get(app, "/users", "page=2"))[1]["page"] is None
+    # 与字段同名的裸名报错（不静默取默认）；严格整数写法以外的都拒。
+    status, body = asyncio.run(_get(app, "/users", "pageSize=50"))
+    assert status == 422
+    assert body["detail"][0]["msg"] == "pageSize 应写作 page.pageSize"
     for bad in (
+        "page=2",
+        "cursor.limit=1&pageSize=1",
         "page.page=02",
         "page.page=%2B2",
         "page.page=2.0",
@@ -236,3 +240,153 @@ def test_fastapi_requests() -> None:
     ):
         assert asyncio.run(_get(app, "/users", bad))[0] == 422, bad
     assert asyncio.run(_get(app, "/orders", "page.pageSize=51"))[0] == 422
+
+
+# ---- 裸名：与字段同名的不静默丢弃 ----
+
+
+@pytest.mark.parametrize(
+    ("model", "bare", "wire"),
+    [
+        (PagedListQuery, "page", "page.page"),
+        (PagedListQuery, "pageSize", "page.pageSize"),
+        (PagedListQuery, "query", "page.query"),
+        (PagedListQuery, "orderBy", "page.orderBy"),
+        (CursorListQuery, "after", "cursor.after"),
+        (CursorListQuery, "limit", "cursor.limit"),
+    ],
+)
+def test_bare_names_are_rejected_with_the_wire_name(
+    model: type[PagedListQuery] | type[CursorListQuery], bare: str, wire: str
+) -> None:
+    for build in (
+        lambda: model.model_validate({bare: "5"}),
+        lambda: model(**{bare: 5}),
+    ):
+        with pytest.raises(ValidationError) as caught:
+            build()
+        [error] = caught.value.errors()
+        assert error["loc"] == (bare,)
+        assert error["type"] == "bare_parameter_name"
+        assert error["msg"] == f"{bare} 应写作 {wire}"
+
+
+def test_wire_names_still_work_for_direct_construction() -> None:
+    assert PagedListQuery(**{"page.pageSize": 5}).pageSize == 5
+
+
+# ---- 子类新增字段：前缀内不行，前缀外可以 ----
+
+
+class OrderSearchQuery(PagedListQuery):
+    """接口自己的其他查询参数声明在同一个子类里，线上名在前缀之外。"""
+
+    pageSize: JsonInt = Field(default=20, le=50)
+    status: str | None = None
+    # 查询串的值都是字符串；前缀外字段按自己的声明校验，整数要自己允许从字符串转换。
+    minAmount: Annotated[int | None, Field(strict=False, ge=0)] = None
+
+
+def test_query_subclass_cannot_add_fields_under_the_prefix() -> None:
+    # 不写别名时，新加字段的线上名就是字段名，在前缀之外，可以加。
+    class Ok(PagedListQuery):
+        foo: str | None = None
+
+    assert Ok.model_fields["foo"].alias == "foo"
+    with pytest.raises(TypeError, match="不能新增这个前缀下的字段：foo（'page.foo'）"):
+        type(
+            "Bad",
+            (PagedListQuery,),
+            {
+                "__annotations__": {"foo": str | None},
+                "foo": Field(default=None, alias="page.foo"),
+            },
+        )
+    with pytest.raises(TypeError, match="cursor.foo"):
+        type(
+            "Bad",
+            (CursorListQuery,),
+            {
+                "__annotations__": {"foo": str | None},
+                "foo": Field(default=None, alias="cursor.foo"),
+            },
+        )
+
+
+def test_query_subclass_cannot_add_fields_named_like_bare_names() -> None:
+    with pytest.raises(TypeError, match="'pageSize' 应写作 'page.pageSize'"):
+        type(
+            "Bad",
+            (PagedListQuery,),
+            {
+                "__annotations__": {"size": str | None},
+                "size": Field(default=None, alias="pageSize"),
+            },
+        )
+    with pytest.raises(TypeError, match="'limit' 应写作 'cursor.limit'"):
+        type(
+            "Bad",
+            (CursorListQuery,),
+            {
+                "__annotations__": {"limit2": str | None},
+                "limit2": Field(default=None, alias="limit"),
+            },
+        )
+
+
+def test_query_subclass_extra_fields_follow_their_own_declaration() -> None:
+    query = OrderSearchQuery.model_validate(
+        {"page.page": "2", "status": "paid", "minAmount": "100", "other": "x"}
+    )
+    assert (query.page, query.pageSize, query.status, query.minAmount) == (
+        2,
+        20,
+        "paid",
+        100,
+    )
+    with pytest.raises(ValidationError) as caught:
+        OrderSearchQuery.model_validate({"minAmount": "-1"})
+    assert caught.value.errors()[0]["loc"] == ("minAmount",)
+    exported = OrderSearchQuery.model_json_schema()["properties"]
+    assert list(exported) == [
+        *PAGED_LIST_REQUEST_PARAMS.values(),
+        "status",
+        "minAmount",
+    ]
+
+
+def test_fastapi_query_subclass_with_own_parameters() -> None:
+    app = FastAPI()
+
+    @app.get("/orders")
+    def search(params: Annotated[OrderSearchQuery, Query()]) -> dict[str, Any]:
+        return params.model_dump(exclude_none=True)
+
+    parameters = app.openapi()["paths"]["/orders"]["get"]["parameters"]
+    assert [p["name"] for p in parameters] == [
+        *PAGED_LIST_REQUEST_PARAMS.values(),
+        "status",
+        "minAmount",
+    ]
+    by_name = {p["name"]: p["schema"] for p in parameters}
+    assert (
+        by_name["page.pageSize"]["minimum"],
+        by_name["page.pageSize"]["maximum"],
+    ) == (1, 50)
+    assert not _contains_key(
+        [by_name[w] for w in PAGED_LIST_REQUEST_PARAMS.values()], "anyOf"
+    )
+    assert asyncio.run(
+        _get(app, "/orders", "page.page=2&status=paid&minAmount=100")
+    ) == (
+        200,
+        {"page.page": 2, "page.pageSize": 20, "status": "paid", "minAmount": 100},
+    )
+    for bad in (
+        "minAmount=abc",
+        "minAmount=-1",
+        "page.pageSize=51",
+        "pageSize=10",
+        "page.foo=1",
+    ):
+        assert asyncio.run(_get(app, "/orders", bad))[0] == 422, bad
