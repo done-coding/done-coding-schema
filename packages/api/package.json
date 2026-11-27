@@ -6,17 +6,34 @@
   "main": "lib/index.cjs",
   "module": "es/index.mjs",
   "types": "types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "reference": [
+        "types/reference.d.ts"
+      ]
+    }
+  },
   "type": "module",
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
-      "import": "./es/index.mjs",
-      "require": "./lib/index.cjs"
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./es/index.mjs"
+      },
+      "require": {
+        "types": "./types/index.d.cts",
+        "default": "./lib/index.cjs"
+      }
     },
     "./reference": {
-      "types": "./types/reference.d.ts",
-      "import": "./es/reference.mjs",
-      "require": "./lib/reference.cjs"
+      "import": {
+        "types": "./types/reference.d.ts",
+        "default": "./es/reference.mjs"
+      },
+      "require": {
+        "types": "./types/reference.d.cts",
+        "default": "./lib/reference.cjs"
+      }
     },
     "./schemas/*": "./schemas/*",
     "./package.json": "./package.json"

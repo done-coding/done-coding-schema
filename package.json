@@ -15,7 +15,7 @@
     "version": "node scripts/sync-python-version.mjs && git add python/pyproject.toml python/uv.lock",
     "gen": "node scripts/generate.mjs",
     "check:examples": "node scripts/check-examples.mjs",
-    "check:bundle": "pnpm -F @done-coding/schema-api build && node scripts/check-bundle.mjs",
+    "check:bundle": "pnpm -F @done-coding/schema-api build && node scripts/check-bundle.mjs && node scripts/check-type-resolution.mjs",
     "check:generated": "node scripts/generate.mjs --check",
     "check": "pnpm check:examples && pnpm check:generated && pnpm check:versions && pnpm check:license && pnpm -F @done-coding/schema-api typecheck && pnpm -F @done-coding/schema-api exec vitest run && pnpm check:python && pnpm check:bundle && pnpm check:wheel",
     "check:python": "uv run --project python --frozen pytest -q",

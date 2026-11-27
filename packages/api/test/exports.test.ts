@@ -72,11 +72,25 @@ describe("包的运行时导出", () => {
     );
   });
 
-  it("package.json 声明了参考资源子路径，三种产物齐全", () => {
-    expect(pkg.exports["./reference"]).toEqual({
-      types: "./types/reference.d.ts",
-      import: "./es/reference.mjs",
-      require: "./lib/reference.cjs",
+  it("package.json 声明了两个出口，import / require 各有产物与类型声明", () => {
+    for (const [subpath, entry] of [
+      [".", "index"],
+      ["./reference", "reference"],
+    ]) {
+      expect(pkg.exports[subpath]).toEqual({
+        import: {
+          types: `./types/${entry}.d.ts`,
+          default: `./es/${entry}.mjs`,
+        },
+        require: {
+          types: `./types/${entry}.d.cts`,
+          default: `./lib/${entry}.cjs`,
+        },
+      });
+    }
+    // moduleResolution 为 node（node10）时不认 exports，靠 typesVersions 找到子路径的类型。
+    expect(pkg.typesVersions).toEqual({
+      "*": { reference: ["types/reference.d.ts"] },
     });
   });
 
