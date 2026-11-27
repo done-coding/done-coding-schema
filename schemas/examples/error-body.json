@@ -322,6 +322,32 @@
         },
         "requestId": "req-01"
       }
+    },
+    {
+      "name": "requestId 含 U+001C（ECMA-262 不算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req\u001c01"
+      }
+    },
+    {
+      "name": "message 只有 U+0085（ECMA-262 不算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "\u0085",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      }
     }
   ],
   "invalid": [
@@ -651,6 +677,25 @@
       ]
     },
     {
+      "name": "message 只有 U+FEFF（纯空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "\ufeff",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
       "name": "message 超过 1000 字符",
       "data": {
         "code": "ORDER_LOCKED",
@@ -775,6 +820,25 @@
           "outcome": "unknown"
         },
         "requestId": "req-01\n"
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "requestId 含 U+FEFF（ECMA-262 算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req\ufeff01"
       },
       "errors": [
         {

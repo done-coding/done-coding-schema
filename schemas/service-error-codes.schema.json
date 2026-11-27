@@ -8,7 +8,7 @@
     "service": {
       "description": "服务标识：小写字母开头，只含小写字母、数字、短横线，最长 64 个字符。",
       "type": "string",
-      "pattern": "^[a-z][a-z0-9\\-]{0,63}$"
+      "pattern": "^[a-z][a-z0-9\\-]{0,63}$(?![\\s\\S])"
     },
     "codes": {
       "description": "专有码，至少 1 项；code 在清单内不重复（x-uniqueItemsBy）。",
@@ -30,10 +30,15 @@
           "description": "码：整体大写下划线或整体小写下划线写法，字母开头，不以下划线结尾，不含连续下划线，最长 128 个字符。",
           "type": "string",
           "maxLength": 128,
-          "pattern": "^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
+          "pattern": "^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$(?![\\s\\S])",
           "allOf": [
             { "not": { "const": "OK" } },
-            { "not": { "type": "string", "pattern": "^HTTP_[0-9]+$" } }
+            {
+              "not": {
+                "type": "string",
+                "pattern": "^HTTP_[0-9]+$(?![\\s\\S])"
+              }
+            }
           ]
         },
         "stage": {

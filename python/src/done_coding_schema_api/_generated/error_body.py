@@ -27,7 +27,13 @@ class ErrorField(SchemaModel):
     """
     字段级错误码：字母开头，只含字母、数字、下划线、点、短横线，1–128 个字符。
     """
-    message: Annotated[StrictStr, Field(max_length=1000, pattern="\\S")]
+    message: Annotated[
+        StrictStr,
+        Field(
+            max_length=1000,
+            pattern="[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]",
+        ),
+    ]
     """
     说明，不能是纯空白。
     """
@@ -80,7 +86,13 @@ class ErrorBody(SchemaModel):
     """
     业务码，开放字符串：字母开头，只含字母、数字、下划线，1–128 个字符；不能是 OK。使用方遇到不认识的码按 HTTP 状态归类处理。
     """
-    message: Annotated[StrictStr, Field(max_length=1000, pattern="\\S")]
+    message: Annotated[
+        StrictStr,
+        Field(
+            max_length=1000,
+            pattern="[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]",
+        ),
+    ]
     """
     说明，不能是纯空白。
     """
@@ -89,7 +101,12 @@ class ErrorBody(SchemaModel):
     错误体恒为 null。
     """
     error: ErrorDetail
-    requestId: Annotated[StrictStr, Field(pattern="^\\S{1,128}$")]
+    requestId: Annotated[
+        StrictStr,
+        Field(
+            pattern="^[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]{1,128}$"
+        ),
+    ]
     """
     请求标识，1–128 个字符，不含空白字符。
     """

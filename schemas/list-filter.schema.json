@@ -7,7 +7,7 @@
   "x-pathConstants": "LIST_FILTER_PARAMS",
   "type": "object",
   "patternProperties": {
-    "^[a-z][a-zA-Z0-9]*$": { "$ref": "#/$defs/condition" }
+    "^[a-z][a-zA-Z0-9]*$(?![\\s\\S])": { "$ref": "#/$defs/condition" }
   },
   "additionalProperties": false,
   "$defs": {

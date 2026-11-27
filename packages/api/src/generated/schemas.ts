@@ -29,7 +29,8 @@ export const cursorListRequestSchema: SchemaDocument = {
   $id: "cursor-list-request.schema.json",
   title: "CursorListRequest",
   description:
-    "游标式列表的请求参数。线上以 cursor. 前缀的查询参数传递（如 cursor.limit=20），本定义约束解码后的对象；前缀下未声明的参数不合法。",
+    '游标式列表的请求参数。线上以 cursor. 前缀的查询参数传递（如 cursor.limit=20），本定义约束解码后的对象；前缀下未声明的参数不合法。线上名为「前缀.字段名」。查询串里的整数参数（type 为 integer 的字段）只收整串匹配 x-queryIntegerPattern 的十进制数字串，解码成整数后再按本定义校验；"02"、"+2"、" 2"、"2.0"、"1e1"、空串都不合法。',
+  "x-queryIntegerPattern": "^(?:0|[1-9][0-9]*)$(?![\\s\\S])",
   "x-paramPrefix": "cursor",
   "x-pathConstants": "CURSOR_LIST_REQUEST_PARAMS",
   type: "object",
@@ -116,7 +117,7 @@ export const errorBodySchema: SchemaDocument = {
       description:
         "业务码，开放字符串：字母开头，只含字母、数字、下划线，1–128 个字符；不能是 OK。使用方遇到不认识的码按 HTTP 状态归类处理。",
       type: "string",
-      pattern: "^[A-Za-z][A-Za-z0-9_]{0,127}$",
+      pattern: "^[A-Za-z][A-Za-z0-9_]{0,127}$(?![\\s\\S])",
       not: {
         const: "OK",
       },
@@ -125,7 +126,8 @@ export const errorBodySchema: SchemaDocument = {
       description: "说明，不能是纯空白。",
       type: "string",
       maxLength: 1000,
-      pattern: "\\S",
+      pattern:
+        "[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]",
     },
     data: {
       description: "错误体恒为 null。",
@@ -137,7 +139,8 @@ export const errorBodySchema: SchemaDocument = {
     requestId: {
       description: "请求标识，1–128 个字符，不含空白字符。",
       type: "string",
-      pattern: "^\\S{1,128}$",
+      pattern:
+        "^[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]{1,128}$(?![\\s\\S])",
     },
     detail: {
       description: "补充说明，可选，不限长。",
@@ -186,19 +189,20 @@ export const errorBodySchema: SchemaDocument = {
           description:
             "字段级错误码：字母开头，只含字母、数字、下划线、点、短横线，1–128 个字符。",
           type: "string",
-          pattern: "^[A-Za-z][A-Za-z0-9_.\\-]{0,127}$",
+          pattern: "^[A-Za-z][A-Za-z0-9_.\\-]{0,127}$(?![\\s\\S])",
         },
         message: {
           description: "说明，不能是纯空白。",
           type: "string",
           maxLength: 1000,
-          pattern: "\\S",
+          pattern:
+            "[^\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]",
         },
         pointer: {
           description: "请求体内的位置，RFC 6901 JSON Pointer。",
           type: "string",
           pattern:
-            "^(?:(?:/(?:[^~/]|~[01])*)*/(?:(?:[^~/]|~[01])*(?:[^~/\\n]|~[01]))?)?$",
+            "^(?:(?:/(?:[^~/]|~[01])*)*/(?:(?:[^~/]|~[01])*(?:[^~/\\n]|~[01]))?)?$(?![\\s\\S])",
         },
         parameter: {
           description: "参数名，1–256 个字符。",
@@ -243,7 +247,7 @@ export const listFilterSchema: SchemaDocument = {
   "x-pathConstants": "LIST_FILTER_PARAMS",
   type: "object",
   patternProperties: {
-    "^[a-z][a-zA-Z0-9]*$": {
+    "^[a-z][a-zA-Z0-9]*$(?![\\s\\S])": {
       $ref: "#/$defs/condition",
     },
   },
@@ -270,7 +274,8 @@ export const pagedListRequestSchema: SchemaDocument = {
   $id: "paged-list-request.schema.json",
   title: "PagedListRequest",
   description:
-    "页码式列表的请求参数。线上以 page. 前缀的查询参数传递（如 page.pageSize=20），本定义约束解码后的对象；前缀下未声明的参数不合法。",
+    '页码式列表的请求参数。线上以 page. 前缀的查询参数传递（如 page.pageSize=20），本定义约束解码后的对象；前缀下未声明的参数不合法。线上名为「前缀.字段名」。查询串里的整数参数（type 为 integer 的字段）只收整串匹配 x-queryIntegerPattern 的十进制数字串，解码成整数后再按本定义校验；"02"、"+2"、" 2"、"2.0"、"1e1"、空串都不合法。',
+  "x-queryIntegerPattern": "^(?:0|[1-9][0-9]*)$(?![\\s\\S])",
   "x-paramPrefix": "page",
   "x-pathConstants": "PAGED_LIST_REQUEST_PARAMS",
   type: "object",
@@ -296,7 +301,7 @@ export const pagedListRequestSchema: SchemaDocument = {
       type: "string",
       maxLength: 200,
       pattern:
-        "^[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?(?:, ?[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?)*$",
+        "^[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?(?:, ?[a-z][a-zA-Z0-9]*(?: (?:asc|desc))?)*$(?![\\s\\S])",
     },
   },
   additionalProperties: false,
@@ -379,7 +384,7 @@ export const serviceErrorCodesSchema: SchemaDocument = {
       description:
         "服务标识：小写字母开头，只含小写字母、数字、短横线，最长 64 个字符。",
       type: "string",
-      pattern: "^[a-z][a-z0-9\\-]{0,63}$",
+      pattern: "^[a-z][a-z0-9\\-]{0,63}$(?![\\s\\S])",
     },
     codes: {
       description:
@@ -407,7 +412,7 @@ export const serviceErrorCodesSchema: SchemaDocument = {
           type: "string",
           maxLength: 128,
           pattern:
-            "^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
+            "^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$(?![\\s\\S])",
           allOf: [
             {
               not: {
@@ -417,7 +422,7 @@ export const serviceErrorCodesSchema: SchemaDocument = {
             {
               not: {
                 type: "string",
-                pattern: "^HTTP_[0-9]+$",
+                pattern: "^HTTP_[0-9]+$(?![\\s\\S])",
               },
             },
           ],

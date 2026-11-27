@@ -917,6 +917,28 @@
       ]
     },
     {
+      "name": "code 为 HTTP_<数字> 加末尾换行（格式不符，不算保留码）",
+      "data": {
+        "service": "order-service",
+        "codes": [
+          {
+            "code": "HTTP_404\n",
+            "stage": "accept",
+            "httpStatus": 409,
+            "retryable": false,
+            "outcome": "not_executed",
+            "meaning": "订单已锁定，不能修改"
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "/codes/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
       "name": "stage 取值不在范围内",
       "data": {
         "service": "order-service",

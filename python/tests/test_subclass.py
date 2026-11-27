@@ -33,11 +33,15 @@ from done_coding_schema_api import (
     PagedListPage,
     PagedListRequest,
     ServiceErrorCode,
+    SuccessEnvelope,
+    load_schema,
 )
 from done_coding_schema_api.reference import (
     CURSOR_LIST_REQUEST_PARAMS,
     PAGED_LIST_REQUEST_PARAMS,
 )
+
+ERROR_BODY_SOURCE = load_schema("error-body")["properties"]
 
 
 class User(BaseModel):
@@ -84,6 +88,18 @@ class TightCode(ServiceErrorCode):
     """专有码的含义收短到 20 字符（定义是 1000）。"""
 
     meaning: str = Field(max_length=20)
+
+
+class CappedPage(PagedListPage):
+    """嵌套模型的子类：每页至多 100 条。"""
+
+    pageSize: JsonInt = Field(ge=1, le=100)
+
+
+class CappedList(PagedList):
+    """把嵌套的 page 换成上面的子类。"""
+
+    page: CappedPage
 
 
 INTEGER_PARAMS = {
@@ -176,6 +192,13 @@ CASES: list[tuple[type[BaseModel], list[Any]]] = [
         + [{"pageSize": 20}, {"page.page": 2, "page.query": "甲"}, {"page.limit": 1}],
     ),
     (
+        CappedList,
+        [
+            {"items": [], "page": {"totalRecord": 0, "pageSize": s, "totalPage": 0}}
+            for s in (0, 1, 100, 101)
+        ],
+    ),
+    (
         OrderCursorQuery,
         [{"cursor.limit": v} for v in (0, 1, 50, 51)]
         + [
@@ -246,10 +269,10 @@ def test_redeclared_field_is_exported_as_intersection() -> None:
 def test_narrowed_and_extra_patterns_are_exported() -> None:
     code = OrderFailure.model_json_schema()["properties"]["code"]
     assert code["enum"] == ["ORDER_LOCKED", "ORDER_GONE", "OK"]
-    assert code["pattern"] == "^[A-Za-z][A-Za-z0-9_]{0,127}$"
+    assert code["pattern"] == ERROR_BODY_SOURCE["code"]["pattern"]
     assert code["not"] == {"const": "OK"}
     request_id = TracedFailure.model_json_schema()["properties"]["requestId"]
-    assert request_id["pattern"] == "^\\S{1,128}$"
+    assert request_id["pattern"] == ERROR_BODY_SOURCE["requestId"]["pattern"]
     assert request_id["allOf"] == [{"pattern": "^req-"}]
     meaning = TightCode.model_json_schema()["properties"]["meaning"]
     assert (meaning["minLength"], meaning["maxLength"]) == (1, 20)
@@ -259,7 +282,10 @@ def test_required_field_with_default_becomes_optional() -> None:
     exported = LenientFailure.model_json_schema()
     assert "requestId" not in exported["required"]
     assert exported["properties"]["requestId"]["default"] == "unknown"
-    assert exported["properties"]["requestId"]["pattern"] == "^\\S{1,128}$"
+    assert (
+        exported["properties"]["requestId"]["pattern"]
+        == ERROR_BODY_SOURCE["requestId"]["pattern"]
+    )
 
 
 def test_renamed_fields_are_exported_under_wire_names() -> None:
@@ -486,3 +512,62 @@ def test_unrenamed_subclasses_are_still_allowed() -> None:
 
     assert Narrow.model_fields["meaning"].alias is None
     assert Page.model_json_schema()["properties"]["page"]["x-totalPageEqualsCeil"]
+
+
+# ---- 嵌套模型字段换成子类：导出只有一份，必填顺序不变 ----
+
+
+def _page_of(schema: dict[str, Any], defs: dict[str, Any]) -> dict[str, Any]:
+    ref = schema["properties"]["page"]["$ref"].removeprefix("#/$defs/")
+    return defs[ref]
+
+
+def test_nested_model_override_is_exported_once() -> None:
+    source = PagedList.model_json_schema()
+    exported = CappedList.model_json_schema()
+    page = exported["properties"]["page"]
+    # 只有一份：引用子类的导出，不再叠一份原定义；原字段的说明保留。
+    assert set(page) == {"$ref", "description"}
+    assert page["description"] == source["properties"]["page"]["description"]
+    capped = _page_of(exported, exported["$defs"])
+    assert capped["properties"]["pageSize"]["maximum"] == 100
+    assert capped["properties"]["pageSize"]["minimum"] == 1
+    assert capped["x-totalPageEqualsCeil"] is True
+    assert exported["required"] == source["required"]
+    assert capped["required"] == source["properties"]["page"]["required"]
+
+
+def test_nested_model_override_inside_envelope() -> None:
+    exported = SuccessEnvelope[CappedList].model_json_schema()
+    defs = exported["$defs"]
+    listed = defs[exported["properties"]["data"]["$ref"].removeprefix("#/$defs/")]
+    assert set(listed["properties"]["page"]) == {"$ref", "description"}
+    assert _page_of(listed, defs)["properties"]["pageSize"]["maximum"] == 100
+    assert listed["required"] == PagedList.model_json_schema()["required"]
+    assert exported["required"] == SuccessEnvelope.model_json_schema()["required"]
+
+
+def test_required_order_is_kept_when_first_field_is_redeclared() -> None:
+    class Narrow(ErrorBody):
+        code: Literal["ORDER_LOCKED"]
+
+    assert (
+        Narrow.model_json_schema()["required"]
+        == ErrorBody.model_json_schema()["required"]
+    )
+
+
+def test_unrelated_nested_model_is_still_intersected() -> None:
+    # 换成与原模型无继承关系的模型时，不能只引用它（会比定义宽），仍取交集：
+    # 原定义的结构与新模型的引用都在。
+    class Detail(BaseModel):
+        retryable: bool
+        outcome: Literal["unknown"]
+
+    class Odd(ErrorBody):
+        error: Detail
+
+    error = Odd.model_json_schema()["properties"]["error"]
+    assert error["$ref"] == "#/$defs/Detail"
+    assert error["additionalProperties"] is False
+    assert set(error["required"]) == {"retryable", "outcome"}

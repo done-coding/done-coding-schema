@@ -98,6 +98,49 @@ export function useJsonInt(source) {
   return withoutImport.replace(/\bStrictInt\b/g, "JsonInt");
 }
 
+/** 定义里表示「真正的文本结尾」的写法：`$` 后加前瞻，Python 的 re 下也不放过结尾换行。 */
+export const TRUE_END = "$(?![\\s\\S])";
+
+/**
+ * 定义的 pattern → 生成模型用的 pattern。
+ * pydantic 默认的正则引擎（Rust regex）不支持前瞻，而它的 `$` 本来就只匹配文本结尾，
+ * 所以把结尾的 TRUE_END 换回 `$`；其余部分原样。剩下任何前瞻、后顾都直接报错。
+ */
+export function toModelPattern(pattern) {
+  const converted = pattern.endsWith(TRUE_END)
+    ? `${pattern.slice(0, -TRUE_END.length)}$`
+    : pattern;
+  if (/\(\?<?[=!]/.test(converted)) {
+    throw new Error(`生成模型用的正则引擎不支持前瞻与后顾：${pattern}`);
+  }
+  return converted;
+}
+
+/** 形状里的 pattern 与 patternProperties 的键都换成生成模型用的写法。 */
+function withModelPatterns(node) {
+  if (Array.isArray(node)) return node.map(withModelPatterns);
+  if (node === null || typeof node !== "object") return node;
+  return Object.fromEntries(
+    Object.entries(node).map(([key, value]) => {
+      if (key === "pattern" && typeof value === "string") {
+        return [key, toModelPattern(value)];
+      }
+      if (key === "patternProperties") {
+        return [
+          key,
+          Object.fromEntries(
+            Object.entries(value).map(([regex, child]) => [
+              toModelPattern(regex),
+              withModelPatterns(child),
+            ]),
+          ),
+        ];
+      }
+      return [key, withModelPatterns(value)];
+    }),
+  );
+}
+
 /**
  * @returns {Map<string, string>} 模块文件名 → 未加 banner 的源码
  */
@@ -112,7 +155,11 @@ export function generatePythonModels(entries) {
     )) {
       fs.writeFileSync(
         path.join(input, `${baseName(file)}.json`),
-        JSON.stringify(shapeOf(schema, { dropFalseProperties: true }), null, 2),
+        JSON.stringify(
+          withModelPatterns(shapeOf(schema, { dropFalseProperties: true })),
+          null,
+          2,
+        ),
       );
     }
     uvRun([

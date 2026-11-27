@@ -597,7 +597,8 @@
           "keyword": "x-itemsWithinPage",
           "params": {
             "by": "pageSize",
-            "limit": 2
+            "limit": 2,
+            "errorType": "items_exceed_page_size"
           }
         }
       ]
@@ -618,7 +619,8 @@
           "keyword": "x-itemsWithinPage",
           "params": {
             "by": "totalRecord",
-            "limit": 1
+            "limit": 1,
+            "errorType": "items_exceed_total_record"
           }
         }
       ]
@@ -639,7 +641,8 @@
           "keyword": "x-itemsWithinPage",
           "params": {
             "by": "totalRecord",
-            "limit": 0
+            "limit": 0,
+            "errorType": "items_exceed_total_record"
           }
         }
       ]
@@ -660,7 +663,8 @@
           "keyword": "x-itemsWithinPage",
           "params": {
             "by": "pageSize",
-            "limit": 2
+            "limit": 2,
+            "errorType": "items_exceed_page_size"
           }
         },
         {
@@ -668,7 +672,8 @@
           "keyword": "x-itemsWithinPage",
           "params": {
             "by": "totalRecord",
-            "limit": 2
+            "limit": 2,
+            "errorType": "items_exceed_total_record"
           }
         }
       ]

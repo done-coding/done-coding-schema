@@ -1,8 +1,10 @@
-"""用仓根 schemas/examples/ 的同一组样例核对 Python 模型。
+"""用仓根 schemas/examples/ 的同一组样例核对 Python 侧，三个裁判须与定义（Ajv）同结论：
 
-样例的合法 / 不合法由定义校验（仓根 pnpm check:examples）保证，这里把它当作定义的判决：
+样例的合法 / 不合法由定义校验（仓根 pnpm check:examples，Ajv 加 x- 关键字）保证，这里把它当作定义的判决：
 
 - 包装层（对外导出的模型）对每个样例的接受与拒绝必须与定义一致，JSON 与 Python 两种输入都测；
+- Python 的通用校验器 jsonschema 直接拿包里的定义文件判，结论须与定义一致；通用校验器
+  不认 x- 检查关键字，所以只因 x- 关键字被拒的样例，它判合法才算一致；
 - 生成模型（未经包装）与定义不一致的样例必须恰好是 GENERATED_GAPS 登记的那些：
   多出一条（生成物悄悄变宽）或少了一条（登记过期）都失败。
 """
@@ -14,7 +16,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ValidationError
+from referencing import Registry, Resource
 
 from done_coding_schema_api import (
     BoundedList,
@@ -26,6 +30,8 @@ from done_coding_schema_api import (
     PagedListRequest,
     ServiceErrorCodes,
     SuccessEnvelope,
+    load_schema,
+    schema_names,
 )
 from done_coding_schema_api._generated import (
     bounded_list,
@@ -35,6 +41,10 @@ from done_coding_schema_api._generated import (
     paged_list,
     service_error_codes,
     success_envelope,
+)
+from done_coding_schema_api.reference import (
+    load_reference_schema,
+    reference_schema_names,
 )
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "schemas" / "examples"
@@ -179,3 +189,120 @@ def test_generated_gaps_are_exactly_registered() -> None:
             actual.add((structure, name))
     assert sorted(actual - GENERATED_GAPS.keys()) == [], "生成模型新增了不一致"
     assert sorted(GENERATED_GAPS.keys() - actual) == [], "登记的不一致已不存在"
+
+
+# ---- 第三个裁判：Python jsonschema 直接拿包里的定义文件判 ----
+
+
+def _documents() -> dict[str, dict[str, Any]]:
+    return {
+        **{name: load_schema(name) for name in schema_names()},
+        **{name: load_reference_schema(name) for name in reference_schema_names()},
+    }
+
+
+DOCUMENTS = _documents()
+REGISTRY = Registry().with_resources(
+    (document["$id"], Resource.from_contents(document))
+    for document in DOCUMENTS.values()
+)
+
+VALIDATORS = {
+    name: Draft202012Validator(document, registry=REGISTRY)
+    for name, document in DOCUMENTS.items()
+}
+
+
+def _generic_samples() -> list[tuple[str, str, Any, bool]]:
+    """(结构名, 样例名, 数据, 通用校验器应判合法)：只因 x- 关键字被拒的样例应判合法。"""
+    samples = []
+    for path in sorted(EXAMPLES_DIR.glob("*.json")):
+        examples = json.loads(path.read_text(encoding="utf-8"))
+        for sample in examples.get("valid", []):
+            samples.append((path.stem, sample["name"], sample["data"], True))
+        for sample in examples.get("invalid", []):
+            only_extensions = all(
+                error["keyword"].startswith("x-") for error in sample["errors"]
+            )
+            samples.append((path.stem, sample["name"], sample["data"], only_extensions))
+    return samples
+
+
+GENERIC_SAMPLES = _generic_samples()
+
+
+@pytest.mark.parametrize(
+    ("structure", "name", "data", "valid"),
+    GENERIC_SAMPLES,
+    ids=[f"{structure}:{name}" for structure, name, _, _ in GENERIC_SAMPLES],
+)
+def test_jsonschema_on_definition_files_matches_definition(
+    structure: str, name: str, data: Any, valid: bool
+) -> None:
+    assert VALIDATORS[structure].is_valid(data) is valid
+
+
+def test_only_extension_keywords_are_loosened() -> None:
+    """通用校验器只在 x- 检查关键字上比定义宽，且只落在用了它们的结构上。"""
+    loosened = {
+        (structure, name)
+        for (structure, name, _, generic), (_, _, _, strict) in zip(
+            GENERIC_SAMPLES, SAMPLES, strict=True
+        )
+        if generic and not strict
+    }
+    assert {structure for structure, _ in loosened} == {
+        "paged-list",
+        "service-error-codes",
+    }
+
+
+# ---- 错误类型：x- 检查关键字的 errorType 与 Python 包报的类型相同 ----
+
+
+def _typed_samples() -> list[tuple[str, Any, list[str]]]:
+    """(样例名, 数据, 定义校验器报的 errorType 列表)：只取带 errorType 的不合法样例。"""
+    examples = json.loads(
+        (EXAMPLES_DIR / "paged-list.json").read_text(encoding="utf-8")
+    )
+    return [
+        (
+            sample["name"],
+            sample["data"],
+            sorted(
+                error["params"]["errorType"]
+                for error in sample["errors"]
+                if "errorType" in error.get("params", {})
+            ),
+        )
+        for sample in examples["invalid"]
+        if any("errorType" in error.get("params", {}) for error in sample["errors"])
+    ]
+
+
+TYPED_SAMPLES = _typed_samples()
+
+
+@pytest.mark.parametrize(
+    ("name", "data", "expected"),
+    TYPED_SAMPLES,
+    ids=[name for name, _, _ in TYPED_SAMPLES],
+)
+def test_error_types_match_definition_validator(
+    name: str, data: Any, expected: list[str]
+) -> None:
+    with pytest.raises(ValidationError) as caught:
+        PagedList.model_validate(data)
+    types = sorted(
+        error["type"]
+        for error in caught.value.errors()
+        if error["type"].startswith("items_exceed_")
+    )
+    assert types == expected
+
+
+def test_both_item_count_error_types_are_covered() -> None:
+    assert {t for _, _, expected in TYPED_SAMPLES for t in expected} == {
+        "items_exceed_page_size",
+        "items_exceed_total_record",
+    }

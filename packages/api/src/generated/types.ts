@@ -13,7 +13,7 @@ export interface BoundedList {
 }
 
 /**
- * 游标式列表的请求参数。线上以 cursor. 前缀的查询参数传递（如 cursor.limit=20），本定义约束解码后的对象；前缀下未声明的参数不合法。
+ * 游标式列表的请求参数。线上以 cursor. 前缀的查询参数传递（如 cursor.limit=20），本定义约束解码后的对象；前缀下未声明的参数不合法。线上名为「前缀.字段名」。查询串里的整数参数（type 为 integer 的字段）只收整串匹配 x-queryIntegerPattern 的十进制数字串，解码成整数后再按本定义校验；"02"、"+2"、" 2"、"2.0"、"1e1"、空串都不合法。
  */
 export interface CursorListRequest {
   /**
@@ -130,7 +130,7 @@ export interface ListFilter {
  * 一个字段上的筛选条件，至少一个操作。
  *
  * This interface was referenced by `ListFilter`'s JSON-Schema definition
- * via the `patternProperty` "^[a-z][a-zA-Z0-9]*$".
+ * via the `patternProperty` "^[a-z][a-zA-Z0-9]*$(?![\s\S])".
  */
 export interface ListFilterCondition {
   /**
@@ -140,7 +140,7 @@ export interface ListFilterCondition {
 }
 
 /**
- * 页码式列表的请求参数。线上以 page. 前缀的查询参数传递（如 page.pageSize=20），本定义约束解码后的对象；前缀下未声明的参数不合法。
+ * 页码式列表的请求参数。线上以 page. 前缀的查询参数传递（如 page.pageSize=20），本定义约束解码后的对象；前缀下未声明的参数不合法。线上名为「前缀.字段名」。查询串里的整数参数（type 为 integer 的字段）只收整串匹配 x-queryIntegerPattern 的十进制数字串，解码成整数后再按本定义校验；"02"、"+2"、" 2"、"2.0"、"1e1"、空串都不合法。
  */
 export interface PagedListRequest {
   /**

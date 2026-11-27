@@ -38,7 +38,7 @@ DataT = TypeVar(
 )
 ItemT = TypeVar("ItemT", default=Any)
 
-_RESERVED_HTTP_CODE = re.compile(r"^HTTP_[0-9]+$")
+_RESERVED_HTTP_CODE = re.compile(r"HTTP_[0-9]+")
 
 
 def _forbid_keys(model: type, data: Any, keys: tuple[str, ...], what: str) -> Any:
@@ -98,15 +98,15 @@ class PagedList(_paged.PagedList, Generic[ItemT]):
                 f"totalPage 应为 ceil(totalRecord / pageSize) = {expected}",
                 page.totalPage,
             )
-        # x-itemsWithinPage
-        for by, limit in (
-            ("pageSize", page.pageSize),
-            ("totalRecord", page.totalRecord),
+        # x-itemsWithinPage：两条各有自己的错误类型，与定义校验器的 errorType 相同。
+        for by, limit, error_type in (
+            ("pageSize", page.pageSize, "items_exceed_page_size"),
+            ("totalRecord", page.totalRecord, "items_exceed_total_record"),
         ):
             if len(self.items) > limit:
                 errors.add(
                     ("items",),
-                    "items_exceed_page",
+                    error_type,
                     f"items 有 {len(self.items)} 条，超过 {by}（{limit}）",
                     len(self.items),
                 )
@@ -215,7 +215,7 @@ def _check_service_code(
     at = ("codes", index)
     # 结构保留字只有 OK 与 HTTP_<数字>，按字节比较，不做大小写归一。
     # 要避开某组通用码由使用方显式检查，见 reference.find_reserved_codes。
-    if item.code == "OK" or _RESERVED_HTTP_CODE.match(item.code):
+    if item.code == "OK" or _RESERVED_HTTP_CODE.fullmatch(item.code):
         errors.add((*at, "code"), "code_reserved", "是结构保留码", item.code)
     if item.stage == "execute":
         if item.httpStatus is not None:

@@ -12,6 +12,8 @@ export const ANNOTATION_KEYWORDS = [
   "x-pathConstants",
   // 参考资源：x-referenceResource 标出整份定义是参考资源（不约束任何结构，
   // 从参考资源出口导出）；x-referenceValue / x-referenceValues 是参考值，不是默认值。
+  // 查询参数模型：查询串里整数参数可接受的写法（解码规则，不参与校验解码后的对象）。
+  "x-queryIntegerPattern",
   "x-referenceResource",
   "x-referenceValue",
   "x-referenceValues",
@@ -20,6 +22,12 @@ export const ANNOTATION_KEYWORDS = [
 const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
+
+/** x-itemsWithinPage 两条检查的错误类型。 */
+const ERROR_TYPES = {
+  pageSize: "items_exceed_page_size",
+  totalRecord: "items_exceed_total_record",
+};
 
 /** 补充检查：返回出错项（不含 keyword / parentSchema，由外层补上）。 */
 export const CHECK_KEYWORDS = {
@@ -51,7 +59,10 @@ export const CHECK_KEYWORDS = {
           ];
     },
   },
-  /** 页码式：items 条数不超过 page.pageSize，也不超过 page.totalRecord。 */
+  /**
+   * 页码式：items 条数不超过 page.pageSize，也不超过 page.totalRecord。
+   * 两条各有错误类型（params.errorType），与 Python 包的报错类型相同。
+   */
   "x-itemsWithinPage": {
     type: "object",
     schemaType: "boolean",
@@ -72,7 +83,12 @@ export const CHECK_KEYWORDS = {
         .filter(([, limit]) => limit !== undefined && items.length > limit)
         .map(([by, limit]) => ({
           instancePath: `${instancePath}/items`,
-          params: { by, limit, count: items.length },
+          params: {
+            by,
+            limit,
+            count: items.length,
+            errorType: ERROR_TYPES[by],
+          },
           message: `items 有 ${items.length} 条，超过 ${by}（${limit}）`,
         }));
     },

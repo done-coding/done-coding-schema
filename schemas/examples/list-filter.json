@@ -93,6 +93,23 @@
       ]
     },
     {
+      "name": "字段名末尾换行",
+      "data": {
+        "status\n": {
+          "eq": "active"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "status\n"
+          }
+        }
+      ]
+    },
+    {
       "name": "字段上不是条件对象",
       "data": {
         "status": "active"

@@ -10,6 +10,7 @@
 两边因此对同一个值给出同样的结论。
 """
 
+from copy import copy
 from typing import Annotated, Any, get_args
 from weakref import WeakKeyDictionary
 
@@ -70,8 +71,63 @@ def _redeclared(model: type[BaseModel]) -> dict[str, FieldInfo]:
         for name, field in model.__pydantic_fields__.items()
         if name in originals
         and name not in type_params
-        and repr(field) != repr(originals[name])
+        and _declaration(field) != _declaration(originals[name])
     }
+
+
+_NAMING_ATTRIBUTES = (
+    "alias",
+    "alias_priority",
+    "validation_alias",
+    "serialization_alias",
+)
+
+
+def describes_parameter(update: Any) -> Any:
+    """标出「只改参数说明」的 json_schema_extra（查询参数模型用），不算重新声明字段。"""
+    update.__describes_parameter__ = True
+    return update
+
+
+def _declaration(field: FieldInfo) -> str:
+    """字段的声明（类型、默认值、约束、说明等），不含线上字段名与参数说明；
+    只改了这两样不算重新声明。"""
+    unnamed = copy(field)
+    for attribute in _NAMING_ATTRIBUTES:
+        setattr(unnamed, attribute, None)
+    if getattr(unnamed.json_schema_extra, "__describes_parameter__", False):
+        unnamed.json_schema_extra = None
+    return repr(unnamed)
+
+
+def _renamed(model: type[BaseModel]) -> dict[str, str]:
+    """改了线上字段名的字段：原线上名 → 新线上名（只有查询参数模型允许，见 check_wire_names）。"""
+    generated_class = _generated_class(model)
+    if generated_class is None or issubclass(model, RootModel):
+        return {}
+    originals = generated_class.__pydantic_fields__
+    return {
+        _wire_name(name, originals[name]): _wire_name(name, field)
+        for name, field in model.__pydantic_fields__.items()
+        if name in originals
+        and _wire_name(name, field) != _wire_name(name, originals[name])
+    }
+
+
+def _models_in(tp: Any) -> list[type[BaseModel]]:
+    """类型里直接出现的模型类（含 X | None 这类联合里的）。"""
+    if isinstance(tp, type) and issubclass(tp, BaseModel):
+        return [tp]
+    return [model for arg in get_args(tp) for model in _models_in(arg)]
+
+
+def _narrows_model(field: FieldInfo, original: FieldInfo) -> bool:
+    """子类把嵌套模型字段换成了原模型的子类（如 page: MyPage，MyPage 继承 PagedListPage）。"""
+    originals = _models_in(original.annotation)
+    declared = _models_in(field.annotation)
+    return bool(originals and declared) and all(
+        any(issubclass(model, base) for base in originals) for model in declared
+    )
 
 
 # ---- 线上字段名：只有查询参数模型可以改 ----
@@ -272,8 +328,48 @@ _UPPER_BOUNDS = frozenset(
 )
 
 
+TRUE_END = r"$(?![\s\S])"
+
+
+def _model_pattern(pattern: Any) -> Any:
+    r"""定义的 pattern 在生成模型里的写法：结尾的 $(?![\s\S]) 换回 $（见仓根 gen-python.mjs）。"""
+    if isinstance(pattern, str) and pattern.endswith(TRUE_END):
+        return pattern[: -len(TRUE_END)] + "$"
+    return pattern
+
+
+# pydantic 对套了校验函数或联合的类型，会把约束按参数名原样写出（如 JsonInt | None 上的 ge）。
+_PYDANTIC_CONSTRAINTS = {
+    "ge": "minimum",
+    "gt": "exclusiveMinimum",
+    "le": "maximum",
+    "lt": "exclusiveMaximum",
+    "multiple_of": "multipleOf",
+    "min_length": "minLength",
+    "max_length": "maxLength",
+}
+
+
+def _normalize_declared(schema: dict[str, Any]) -> dict[str, Any]:
+    """新声明的结构规整成标准写法：去掉 null 分支（可选字段不接受显式 null，基类会拒），
+    只剩一个分支时展开；约束的参数名换成 JSON Schema 关键字；默认值 null 不写（即「不带」）。"""
+    result = {
+        _PYDANTIC_CONSTRAINTS.get(key, key): value
+        for key, value in schema.items()
+        if not (key == "default" and value is None)
+    }
+    branches = [b for b in result.pop("anyOf", []) if b != {"type": "null"}]
+    if len(branches) == 1:
+        for key, value in _normalize_declared(branches[0]).items():
+            result.setdefault(key, value)
+    elif branches:
+        result["anyOf"] = [_normalize_declared(b) for b in branches]
+    return result
+
+
 def _intersect(source: dict[str, Any], declared: dict[str, Any]) -> dict[str, Any]:
     """源定义的字段结构与子类新声明的交集：同时满足两者的值才合法。"""
+    declared = _normalize_declared(declared)
     merged = dict(source)
     conflicts: dict[str, Any] = {}
     for keyword, value in declared.items():
@@ -281,7 +377,10 @@ def _intersect(source: dict[str, Any], declared: dict[str, Any]) -> dict[str, An
             continue
         if keyword not in merged or keyword in _ANNOTATIONS:
             merged[keyword] = value
-        elif merged[keyword] == value:
+        elif merged[keyword] == value or (
+            keyword == "pattern" and _model_pattern(merged[keyword]) == value
+        ):
+            # 生成模型里的 pattern 只是结尾锚点换了写法，与定义是同一个 pattern。
             continue
         elif keyword in _LOWER_BOUNDS:
             merged[keyword] = max(merged[keyword], value)
@@ -323,7 +422,7 @@ def source_json_schema(
         for name, field in fields.items()
         if name not in originals
     ]
-    if not typed and not redeclared and not extra:
+    if not typed and not redeclared and not extra and not _renamed(model):
         return schema
     default = handler.resolve_ref_schema(handler(core_schema))
     generated = default.get("properties", {})
@@ -340,15 +439,33 @@ def source_json_schema(
                 **({"description": description} if description else {}),
                 **generated[name],
             }
-    renamed: dict[str, str] = {}
-    required = list(schema.get("required", []))
+    renamed = _renamed(model)
     for name, original in redeclared.items():
         old, new = _wire_name(name, original), _wire_name(name, fields[name])
-        renamed[old] = new
-        properties[old] = _intersect(properties[old], generated[new])
-        required = [key for key in required if key != old]
-        if new in generated_required:
-            required.append(new)
+        if _narrows_model(fields[name], original):
+            # 换成了原嵌套模型的子类：子类自己导出的就是交集，引用它即可，不再叠一份原定义。
+            description = properties[old].get("description")
+            properties[old] = {
+                **({"description": description} if description else {}),
+                **{k: v for k, v in generated[new].items() if k != "title"},
+            }
+        else:
+            properties[old] = _intersect(properties[old], generated[new])
+    # 是否必填按新声明；顺序保持源定义里的顺序，子类另加的排在后面。
+    redeclared_keys = {
+        _wire_name(name, original) for name, original in redeclared.items()
+    }
+    required = [
+        renamed.get(key, key)
+        for key in schema.get("required", [])
+        if key not in redeclared_keys or renamed.get(key, key) in generated_required
+    ]
+    required += [
+        _wire_name(name, fields[name])
+        for name in redeclared
+        if _wire_name(name, fields[name]) in generated_required
+        and _wire_name(name, fields[name]) not in required
+    ]
     properties = {renamed.get(key, key): value for key, value in properties.items()}
     for key in extra:
         properties[key] = generated[key]
