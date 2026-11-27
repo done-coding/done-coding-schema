@@ -166,7 +166,7 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 包里的码和数值都不会自己生效。要用，就在自己的代码里写出来：引用包里的参考值，或写自己的值。
 
-**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）不能改线上字段名，设了别名的子类在定义时就报错；只有查询参数模型（`PagedListRequest`、`CursorListRequest`）可以按前缀改名（线上名只能是原名或 `page.原名`、`cursor.原名`），见下面「用作查询参数」。不要用校验器或序列化器自己改线上键名：这种写法绕过了上面的检查，导出的结构也不会反映。
+**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）不能改线上字段名，设了别名的子类在定义时就报错；只有查询参数模型（`PagedListRequest`、`CursorListRequest`）可以按前缀改名（线上名只能是原名或 `page.原名`、`cursor.原名`），见下面「用作查询参数」。不要用校验器或序列化器自己改线上键名：这种写法绕过了上面的检查，导出的结构也不会反映。能不能新增字段以定义为准：三种列表的顶层允许接口自己声明附带字段（如 `summary`），子类可以加，导出与运行时都认；其余结构的定义不接受未声明的字段，子类新增字段在定义时就报错。
 
 ```python
 from pydantic import Field
@@ -191,9 +191,10 @@ class AuditPageRequest(PagedListRequest):
 
 **用作查询参数**（Python）：用包里内置的查询参数模型 `PagedListQuery`、`CursorListQuery`，线上名与解码都已写好：
 
-- 线上名固定为「前缀.字段名」：`page.page`、`page.pageSize`、`page.query`、`page.orderBy`、`cursor.after`、`cursor.limit`；裸名（如 `pageSize`）不收，前缀外的参数不归它管，前缀下未声明的参数（如 `page.limit`）不合法；
+- 线上名固定为「前缀.字段名」：`page.page`、`page.pageSize`、`page.query`、`page.orderBy`、`cursor.after`、`cursor.limit`。写成与字段同名的裸名（如 `?pageSize=50`）会报错并指出应写的线上名（「pageSize 应写作 page.pageSize」，HTTP 下是 422），不会静默用默认值；前缀下未声明的参数（如 `page.limit`）不合法；其余参数不归它管，忽略；
 - 整数参数只收十进制数字串（定义里的 `x-queryIntegerPattern`：`0` 或不以 0 开头的数字），解码后再按定义的上下界校验；`02`、`+2`、` 2`、`2.0`、`1e1`、空串都拒；
-- 继承它声明自己的默认值与上限，规则同上（子类只能收紧），不必再写别名与解码。
+- 继承它声明自己的默认值与上限，规则同上（子类只能收紧），不必再写别名与解码；
+- 接口自己的其他查询参数（如 `status`、`minAmount`）也声明在同一个子类里：线上名就是字段名，在前缀之外，按子类自己的声明校验，不走前缀与整数解码。不能新增前缀下的字段（如 `page.foo`），也不能与上面的裸名同名。查询串的值都是字符串，整数参数要允许从字符串转换（`Field(strict=False)`）。
 
 ```python
 from typing import Annotated, Any
@@ -206,6 +207,8 @@ from done_coding_schema_api import JsonInt, PagedListQuery
 
 class OrderQuery(PagedListQuery):
     pageSize: JsonInt = Field(default=20, le=50)
+    status: str | None = None  # 接口自己的参数：?status=paid
+    minAmount: Annotated[int | None, Field(strict=False, ge=0)] = None
 
 
 app = FastAPI()
@@ -213,10 +216,11 @@ app = FastAPI()
 
 @app.get("/orders")
 def list_orders(params: Annotated[OrderQuery, Query()]) -> dict[str, Any]:
-    return {"page": params.page, "pageSize": params.pageSize}  # ?page.page=2 → {"page": 2, "pageSize": 20}
+    return {"page": params.page, "pageSize": params.pageSize, "status": params.status}
+    # ?page.page=2&status=paid → {"page": 2, "pageSize": 20, "status": "paid"}
 ```
 
-FastAPI 生成的 OpenAPI 里，参数名就是上面的线上名；每个参数的说明取自定义与子类声明的交集，约束写成 `minimum` / `maximum`，可选参数不写成可为 null。FastAPI 0.140 等较早的版本里，查询参数模型要是接口唯一的查询参数才会展开成各个参数。不用 FastAPI 时，把查询串解析成「参数名 → 字符串」的映射后交给 `OrderQuery.model_validate(...)` 即可。
+FastAPI 生成的 OpenAPI 里，参数名就是上面的线上名；每个参数的说明取自定义与子类声明的交集，约束写成 `minimum` / `maximum`，可选参数不写成可为 null。FastAPI 0.140 等较早的版本里，查询参数模型要是接口唯一的查询参数才会展开成各个参数，所以把接口的其他查询参数都声明在这个子类里。不用 FastAPI 时，把查询串解析成「参数名 → 字符串」的映射后交给 `OrderQuery.model_validate(...)` 即可。
 
 **每页条数的默认值与上限**（TypeScript）：类型只描述结构，取值由自己的代码决定：
 
