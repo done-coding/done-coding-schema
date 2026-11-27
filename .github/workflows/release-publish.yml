@@ -137,7 +137,8 @@ jobs:
       # --------------------------------------------------------
       # 发布前构建所有包：考虑某些依赖会是其他不需要发版的workspace包。
       # pnpm check 含样例校验、生成物一致、两包版本一致、两语言测试与构建产物检查，
-      # 任一不过即停，不上传任何包。
+      # 任一不过即停，不上传任何包。pnpm check:min-versions 再在最低支持版本上跑一遍
+      # Python 测试（要联网装包，耗时较长，所以不在 pnpm check 里）。
       # --------------------------------------------------------
       - name: Build and check
         run: |
@@ -157,6 +158,9 @@ jobs:
           fi
           uv build --project python
           pnpm check
+          # 最低支持版本（Python、pydantic 等取自 python/pyproject.toml 的下界）上再跑一遍
+          # 全部 Python 测试：装本机构建的 wheel，用临时环境，跑完清理。
+          pnpm check:min-versions
 
       # --------------------------------------------------------
       # 步骤 9：确认是正式版本

@@ -21,7 +21,8 @@
     "check:python": "uv run --project python --frozen pytest -q",
     "check:versions": "node scripts/check-versions.mjs",
     "check:license": "node scripts/check-license.mjs",
-    "check:wheel": "uv run --project python --frozen python scripts/check-python-dist.py"
+    "check:wheel": "uv run --project python --frozen python scripts/check-python-dist.py",
+    "check:min-versions": "uv run --project python --frozen python scripts/check-min-versions.py"
   },
   "author": "JustSoSu",
   "license": "MIT",

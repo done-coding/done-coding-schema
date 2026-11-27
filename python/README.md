@@ -8,7 +8,7 @@
 pip install done-coding-schema-api
 ```
 
-需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。
+需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。最低版本（Python 3.10、pydantic 2.11、FastAPI 0.140）与当前锁定版本经过测试，中间版本没有逐个测试。
 
 ```python
 from pydantic import BaseModel

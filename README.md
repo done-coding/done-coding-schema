@@ -347,7 +347,7 @@ validateErrorBody({ code: "OK", message: "x", data: null, error: { retryable: fa
 pip install done-coding-schema-api
 ```
 
-需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。模型是严格类型的：不做 `"10"` → `10` 这类转换；整数字段接受 `12.0` 并归一成 `12`（与 JSON Schema 一致）。「定义文件表达不了的约束」也已包含在内。
+需要 Python 3.10 及以上、Pydantic v2（2.11 及以上）。最低版本（Python 3.10、pydantic 2.11、FastAPI 0.140）与当前锁定版本经过测试，中间版本没有逐个测试。模型是严格类型的：不做 `"10"` → `10` 这类转换；整数字段接受 `12.0` 并归一成 `12`（与 JSON Schema 一致）。「定义文件表达不了的约束」也已包含在内。
 
 ```python
 from pydantic import BaseModel
@@ -424,6 +424,7 @@ load_reference_schema("common-error-codes")["title"]  # 'CommonErrorCodes'
 | `pnpm install`、`uv sync --project python` | 安装依赖 |
 | `pnpm gen` | 由 `schemas/` 生成两个包里的类型、模型与常量（生成物不手改） |
 | `pnpm check` | 样例校验、生成物一致、版本一致、许可证副本一致、两语言测试与构建产物检查（含 wheel 与 sdist 里的定义文件） |
+| `pnpm check:min-versions` | 在最低支持版本（取自 `python/pyproject.toml` 的下界）的临时环境里装本机构建的 wheel，跑全部 Python 测试；要联网，耗时较长，发布前必跑，不在 `pnpm check` 里 |
 
 **两种语言的一致性**：`schemas/examples/` 的每个样例先由定义判（Ajv 加 `x-` 关键字的实现，`pnpm check:examples`），再由 Python 包对外导出的模型判（JSON 与 Python 两种输入都测），再由 Python 的通用校验器 jsonschema 直接拿包里的定义文件判（只因 `x-` 检查关键字被拒的样例，它判合法才算一致）；后两者在 `python/tests/test_examples.py`。三方结论须逐例相同，否则 `pnpm check` 不过。样例里包括整数写成 `12.0`、列表条数到上限与超上限、三种列表互斥的字段、通用码配任意 `retryable` / `outcome`、每页条数 500、专有码与通用码同名这类边界。
 

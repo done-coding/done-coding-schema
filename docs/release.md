@@ -15,7 +15,7 @@
 
 1. 同步 master 到发布分支，`pnpm install`。
 2. `lerna version --force-publish` 按约定式提交定出 npm 包的新版本（预发布用 `prerelease --preid alpha`）；`--force-publish` 保证只改了 Python 包时也出版本，正式版另加 `--conventional-graduate` 让预发布版本转为正式版本，原因见「本机发布」第 1 步。仓根 `package.json` 的 `version` 生命周期脚本（`scripts/sync-python-version.mjs`）在提交前把同一版本写进 `python/pyproject.toml` 与 `python/uv.lock`，两个包的版本落在同一个版本提交和同一个标签上。
-3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、许可证副本一致、两语言测试、构建产物检查），任一不过即停，不上传任何包。
+3. 构建两个包并跑 `pnpm check`（样例校验、生成物一致、两包版本一致、许可证副本一致、两语言测试、构建产物检查），再跑 `pnpm check:min-versions`（见下），任一不过即停，不上传任何包。
 4. 核对版本形态：正式版只接受 `X.Y.Z`，预发布只接受预发布版本。PyPI 没有 dist-tag，上传即成为可安装的版本，这一步防止把预发布当正式版上传。
 5. `lerna publish from-package` 上传 npm 包；`uv publish` 上传 Python 包（wheel 与 sdist）。
 6. 推送发布分支与标签（正式版另将 master 快进到 release、把 prerelease 重置到 master）。
@@ -62,7 +62,9 @@ uv build --project python --out-dir <输出目录>
 
    `--force-publish` 不能省：两个包共用一个版本号，只改了 Python 包时 lerna 会判 npm 包「无变化」而不出版本，发布就此停住。加上它，任一边有改动都两个包一起出版本。这时 npm 包的 CHANGELOG 记为「Version bump only」（对 npm 包属实），这一版的改动看同一版本区间的提交记录。正式版的 `--conventional-graduate` 让当前的预发布版本（如 `0.0.1-alpha.4`）转为正式版本（`0.0.1`）；不加时约定式提交只会把预发布号加一（`0.0.1-alpha.5`），版本形态检查会拒绝。当前已是正式版本时它不起作用。
 
-2. `pnpm check` 全过；按上一节构建到仓外的输出目录，核对两包版本相同、都带 `LICENSE`、文件清单没有意外增减。
+2. `pnpm check` 全过；再跑 `pnpm check:min-versions`（必做）；按上一节构建到仓外的输出目录，核对两包版本相同、都带 `LICENSE`、文件清单没有意外增减。
+
+   `pnpm check:min-versions`（`scripts/check-min-versions.py`）在最低支持版本上跑全部 Python 测试：构建 wheel，建临时虚拟环境，装 wheel 与最低版本依赖，把测试与样例拷到临时目录跑 pytest（并确认导入的是装好的 wheel），用完清理。最低版本只取自 `python/pyproject.toml`：Python 取 `requires-python` 的下界，运行时依赖取 `dependencies` 各项下界所在次版本的最新修订版（如 `pydantic>=2.11` 装 `pydantic~=2.11.0`），测试工具取 `dependency-groups.dev` 锁定的版本；FastAPI 不是运行时依赖，最低测试版本写在脚本里（`FASTAPI_MINIMUM`）。要联网装包、耗时较长，所以不并进 `pnpm check`，也不在提交钩子里。
 
 3. 先上传 npm：在仓外临时目录放一个 npmrc，内容只有 `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`（由 npm 展开环境变量，文件里不落令牌），从该目录执行：
 
