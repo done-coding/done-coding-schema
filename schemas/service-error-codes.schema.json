@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "service-error-codes.schema.json",
+  "title": "ServiceErrorCodes",
+  "description": "一个服务的专有业务码清单。OK 与 HTTP_<数字> 形式的码是结构保留字，不得使用；比较按字节精确进行，不做大小写归一。专有码是否要避开某组通用码由使用方显式检查：把那组码传给参考资源出口的检查函数，不传就不比。",
+  "type": "object",
+  "properties": {
+    "service": {
+      "description": "服务标识：小写字母开头，只含小写字母、数字、短横线，最长 64 个字符。",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9\\-]{0,63}$(?![\\s\\S])"
+    },
+    "codes": {
+      "description": "专有码，至少 1 项；code 在清单内不重复（x-uniqueItemsBy）。",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/code" },
+      "x-uniqueItemsBy": "code"
+    }
+  },
+  "required": ["service", "codes"],
+  "additionalProperties": false,
+  "$defs": {
+    "code": {
+      "title": "ServiceErrorCode",
+      "description": "一个专有码。stage 为 execute 时不得有 httpStatus 与 additionalHttpStatuses；为 accept 或 both 时必须有 httpStatus。additionalHttpStatuses 不含主状态（x-arrayExcludesProperty）。",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "码：整体大写下划线或整体小写下划线写法，字母开头，不以下划线结尾，不含连续下划线，最长 128 个字符。",
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$(?![\\s\\S])",
+          "allOf": [
+            { "not": { "const": "OK" } },
+            {
+              "not": {
+                "type": "string",
+                "pattern": "^HTTP_[0-9]+$(?![\\s\\S])"
+              }
+            }
+          ]
+        },
+        "stage": {
+          "description": "accept：受理时同步返回；execute：异步执行阶段产生；both：两者都有。",
+          "enum": ["accept", "execute", "both"]
+        },
+        "httpStatus": {
+          "description": "主 HTTP 状态，4xx 或 5xx。",
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "additionalHttpStatuses": {
+          "description": "同一个码在不同情形下的其他 HTTP 状态：至少 1 项、不重复、不含主状态。",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          }
+        },
+        "retryable": {
+          "description": "原样重试是否可能成功。",
+          "type": "boolean"
+        },
+        "outcome": {
+          "description": "not_executed：确定没有执行；unknown：可能已产生副作用。",
+          "enum": ["not_executed", "unknown"]
+        },
+        "meaning": {
+          "description": "一句话含义，1–1000 个字符。",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": ["code", "stage", "retryable", "outcome", "meaning"],
+      "additionalProperties": false,
+      "if": {
+        "properties": { "stage": { "const": "execute" } },
+        "required": ["stage"]
+      },
+      "then": {
+        "properties": {
+          "httpStatus": false,
+          "additionalHttpStatuses": false
+        }
+      },
+      "else": {
+        "required": ["httpStatus"]
+      },
+      "x-arrayExcludesProperty": {
+        "array": "additionalHttpStatuses",
+        "property": "httpStatus"
+      }
+    }
+  }
+}

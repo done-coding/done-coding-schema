@@ -1,0 +1,105 @@
+{
+  "valid": [
+    {
+      "name": "空列表",
+      "data": {
+        "items": []
+      }
+    },
+    {
+      "name": "带数据",
+      "data": {
+        "items": [
+          {
+            "value": "a",
+            "label": "甲"
+          },
+          {
+            "value": "b",
+            "label": "乙"
+          }
+        ]
+      }
+    },
+    {
+      "name": "带接口自己声明的附带字段",
+      "data": {
+        "items": [1, 2],
+        "summary": {
+          "count": 2
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": [1, 2],
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "缺 items",
+      "data": {
+        "options": []
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "items"
+          }
+        }
+      ]
+    },
+    {
+      "name": "items 不是数组",
+      "data": {
+        "items": {}
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "带 page",
+      "data": {
+        "items": [],
+        "page": {
+          "totalRecord": 0,
+          "pageSize": 10,
+          "totalPage": 0
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "带 cursor",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "false schema"
+        }
+      ]
+    }
+  ]
+}

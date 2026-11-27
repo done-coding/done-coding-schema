@@ -14,3 +14,4 @@ test-results/
 
 # 建仓工具的本机记录（含本机路径），不入库
 .done-coding/template.lock.json
+packages/*/.done-coding/template.lock.json

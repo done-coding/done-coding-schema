@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "success-envelope.schema.json",
+  "title": "SuccessEnvelope",
+  "description": "成功外壳。成功与否、新建还是已受理以 HTTP 状态码为准，code 不随 200 / 201 / 202 变化。",
+  "type": "object",
+  "properties": {
+    "code": {
+      "description": "成功码，恒为 OK。",
+      "const": "OK"
+    },
+    "message": {
+      "description": "说明，可以为空串。",
+      "type": "string",
+      "maxLength": 1000
+    },
+    "data": {
+      "description": "结果对象或 null；标量结果也包成对象（如 {\"count\": 3}）。",
+      "type": ["object", "null"],
+      "additionalProperties": true
+    }
+  },
+  "required": ["code", "message", "data"],
+  "additionalProperties": false
+}

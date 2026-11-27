@@ -1,0 +1,323 @@
+{
+  "valid": [
+    {
+      "name": "还有更多",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true
+        }
+      }
+    },
+    {
+      "name": "没有更多、省略 next",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "name": "没有更多、仍给 next",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false,
+          "next": "x"
+        }
+      }
+    },
+    {
+      "name": "next 恰 1024 字符",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+          "hasMore": true
+        }
+      }
+    },
+    {
+      "name": "带接口自己声明的附带字段",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true
+        },
+        "unreadCount": 3
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": "x",
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "缺 items",
+      "data": {
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "items"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 cursor",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ]
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "cursor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "items 不是数组",
+      "data": {
+        "items": "x",
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/items",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "同时带 page",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true
+        },
+        "page": {
+          "totalRecord": 1,
+          "pageSize": 10,
+          "totalPage": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/page",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "cursor 不是对象",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": "x"
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "cursor 带总数",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "eyJpZCI6MX0",
+          "hasMore": true,
+          "total": 10
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "total"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cursor 缺 hasMore",
+      "data": {
+        "items": [],
+        "cursor": {}
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "hasMore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hasMore 不是布尔",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": "true",
+          "next": "x"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/hasMore",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "next 不是字符串",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false,
+          "next": 1
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/next",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "没有更多时 next 显式为 null",
+      "data": {
+        "items": [],
+        "cursor": {
+          "hasMore": false,
+          "next": null
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/next",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "next 为空串",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "",
+          "hasMore": true
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/next",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "name": "next 超过 1024 字符",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "next": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+          "hasMore": true
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor/next",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "还有更多却没给 next",
+      "data": {
+        "items": [
+          {
+            "id": 1
+          }
+        ],
+        "cursor": {
+          "hasMore": true
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/cursor",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "next"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1743 @@
+{
+  "valid": [
+    {
+      "name": "通用码，带两类出错字段",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed",
+          "fields": [
+            {
+              "in": "query",
+              "code": "out_of_range",
+              "message": "超出范围",
+              "parameter": "page.pageSize"
+            },
+            {
+              "in": "body",
+              "code": "required",
+              "message": "必填",
+              "pointer": "/items/0/name"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "专有码，不带 fields",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "fields 为空数组",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": []
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "带 detail",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01",
+        "detail": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "name": "小写专有码",
+      "data": {
+        "code": "order_locked",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "大小写混合的码",
+      "data": {
+        "code": "OrderLocked",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "HTTP_<数字> 形式的码（错误体只限格式）",
+      "data": {
+        "code": "HTTP_502",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "code 恰 128 字符",
+      "data": {
+        "code": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "message 恰 1000 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "fields 项 message 恰 1000 字符",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed",
+          "fields": [
+            {
+              "in": "query",
+              "code": "too_long",
+              "message": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长",
+              "parameter": "page.query"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "requestId 恰 128 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+      }
+    },
+    {
+      "name": "RATE_LIMITED 可重试",
+      "data": {
+        "code": "RATE_LIMITED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": true,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "SERVICE_UNAVAILABLE 可重试、可能已执行",
+      "data": {
+        "code": "SERVICE_UNAVAILABLE",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": true,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "pointer 为空串（指整个请求体）",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": ""
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "pointer 为 /",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "pointer 含转义",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/a~1b/c~0d"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "pointer 中间含换行",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/a\nb"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "in 为 path / header / cookie",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "path",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "id"
+            },
+            {
+              "in": "header",
+              "code": "x.y-z_1",
+              "message": "不合法",
+              "parameter": "X-Trace"
+            },
+            {
+              "in": "cookie",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "通用码的 retryable 覆盖码表缺省值",
+      "data": {
+        "code": "RATE_LIMITED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      }
+    },
+    {
+      "name": "requestId 含 U+001C（ECMA-262 不算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req\u001c01"
+      }
+    },
+    {
+      "name": "message 只有 U+0085（ECMA-262 不算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "\u0085",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "不是对象",
+      "data": "error",
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "缺 code",
+      "data": {
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "code"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 message",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "message"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 data",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "data"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 error",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "缺 requestId",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "requestId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "多出未声明字段",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01",
+        "status": 400
+      },
+      "errors": [
+        {
+          "instancePath": "",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "code 不是字符串",
+      "data": {
+        "code": 400,
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "code 以数字开头",
+      "data": {
+        "code": "1ORDER",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 含短横线",
+      "data": {
+        "code": "ORDER-LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 超过 128 字符",
+      "data": {
+        "code": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 末尾换行",
+      "data": {
+        "code": "ORDER_LOCKED\n",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 为空串",
+      "data": {
+        "code": "",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "code 为 OK",
+      "data": {
+        "code": "OK",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/code",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "name": "message 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": 1,
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "message 为空串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "message 纯空白",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": " \t\n",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "message 只有 U+FEFF（纯空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "\ufeff",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "message 超过 1000 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/message",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "data 不是 null",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": {},
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/data",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "requestId 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": 1
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "requestId 为空串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": ""
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "requestId 含空格",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req 01"
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "requestId 超过 128 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "requestId 末尾换行",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01\n"
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "requestId 含 U+FEFF（ECMA-262 算空白）",
+      "data": {
+        "code": "INVALID_REQUEST",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "not_executed"
+        },
+        "requestId": "req\ufeff01"
+      },
+      "errors": [
+        {
+          "instancePath": "/requestId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "detail 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01",
+        "detail": {
+          "stack": []
+        }
+      },
+      "errors": [
+        {
+          "instancePath": "/detail",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "可选的 detail 显式为 null",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown"
+        },
+        "requestId": "req-01",
+        "detail": null
+      },
+      "errors": [
+        {
+          "instancePath": "/detail",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "error 不是对象",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": "x",
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "error 缺 retryable",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "retryable"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error 缺 outcome",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "outcome"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error 多出未声明字段",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "status": 409
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "retryable 不是布尔",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": "false",
+          "outcome": "unknown"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/retryable",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "outcome 取值不在范围内",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "executed"
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/outcome",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "name": "fields 不是数组",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": {}
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "fields 的项不是对象",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": ["page"]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "fields 项缺 in",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "in"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fields 项缺 code",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "code"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fields 项缺 message",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "message"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fields 项多出未声明字段",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "page.page",
+              "value": 0
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "value"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in 取值不在范围内",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "form",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/in",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 code 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": 1,
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/code",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 code 以数字开头",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "1x",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 code 含空格",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "out of range",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 code 超过 128 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 code 末尾换行",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid\n",
+              "message": "不合法",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/code",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 message 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": null,
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/message",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 message 纯空白",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "  ",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/message",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "fields 项 message 超过 1000 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错错",
+              "parameter": "page.page"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/message",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "pointer 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": 0
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pointer 显式为 null",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": null
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "pointer 不以 / 开头",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "name"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "pointer 含非法转义",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/a~2"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "pointer 末尾换行",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/name\n"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "name": "parameter 不是字符串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": 1
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/parameter",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "name": "parameter 为空串",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": ""
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/parameter",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "name": "parameter 超过 256 字符",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/parameter",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "name": "in 为 body 缺 pointer",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "pointer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in 为 body 带 parameter",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "body",
+              "code": "invalid",
+              "message": "不合法",
+              "pointer": "/name",
+              "parameter": "name"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/parameter",
+          "keyword": "false schema"
+        }
+      ]
+    },
+    {
+      "name": "in 为 query 缺 parameter",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "query",
+              "code": "invalid",
+              "message": "不合法"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "parameter"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in 为 header 带 pointer",
+      "data": {
+        "code": "ORDER_LOCKED",
+        "message": "请求参数不合法",
+        "data": null,
+        "error": {
+          "retryable": false,
+          "outcome": "unknown",
+          "fields": [
+            {
+              "in": "header",
+              "code": "invalid",
+              "message": "不合法",
+              "parameter": "page.page",
+              "pointer": "/x"
+            }
+          ]
+        },
+        "requestId": "req-01"
+      },
+      "errors": [
+        {
+          "instancePath": "/error/fields/0/pointer",
+          "keyword": "false schema"
+        }
+      ]
+    }
+  ]
+}
