@@ -3,7 +3,7 @@
 > 文档定位：快照型清单 · **[MUST] 由 `scripts/governance-lists.py` 重生成，[MUST NOT] 手工维护**
 > 归档目录 [MUST] 只留 `PROGRESS.md`（条目正文交付时删除）。
 
-共 **13** 个已交付批次。
+共 **14** 个已交付批次。
 
 | 批次 | 所涉领域 | 交付记录 |
 |---|---|---|
@@ -19,4 +19,5 @@
 | `mlijyx-query-prefix-only` | pypi-package | [PROGRESS](archive/mlijyx-query-prefix-only/PROGRESS.md) |
 | `nxksq8-subclass-added-fields` | pypi-package | [PROGRESS](archive/nxksq8-subclass-added-fields/PROGRESS.md) |
 | `p1rbxy-release-readiness` | npm-package · pypi-package · toolchain | [PROGRESS](archive/p1rbxy-release-readiness/PROGRESS.md) |
+| `qor3um-subclass-commitment` | pypi-package | [PROGRESS](archive/qor3um-subclass-commitment/PROGRESS.md) |
 | `sr81xt-backend-feedback-alpha3` | definition · npm-package · pypi-package · toolchain | [PROGRESS](archive/sr81xt-backend-feedback-alpha3/PROGRESS.md) |
