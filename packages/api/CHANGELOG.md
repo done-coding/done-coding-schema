@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.1.0 (2026-11-27)
+
+### Features
+
+- 通用接口结构的定义与 npm / PyPI 契约包 ([#2](https://github.com/done-coding/done-coding-schema/issues/2)) ([a64f85d](https://github.com/done-coding/done-coding-schema/commit/a64f85db636b8d7bd724ced6bf0f8c2c3e0ae4d4))
+
 ## [0.0.1-alpha.4](https://github.com/done-coding/done-coding-schema/compare/@done-coding/schema-api@0.0.1-alpha.3...@done-coding/schema-api@0.0.1-alpha.4) (2026-11-27)
 
 **Note:** Version bump only for package @done-coding/schema-api
