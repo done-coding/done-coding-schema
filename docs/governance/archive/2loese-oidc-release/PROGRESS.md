@@ -17,12 +17,12 @@ after: ""
 
 | 序 | 任务 | 状态 | 证据 |
 |---|---|---|---|
-| ⓐ | 以 template-hub 当前 `oidc-release.yml` 为底本换掉两个旧工作流 | 完成 | 见交付清单 |
-| ⓑ | 加 Python 增量：uv、构建与检查、版本形态、`uv publish` | 完成 | 同上 |
-| ⓒ | 定版本参数：`--force-publish`，正式版加 `--conventional-graduate` | 完成 | 同上 |
-| ⓓ | lerna 7 → 9.0.7，`engines.node`、`packageManager`、锁文件 | 完成 | 同上 |
+| ⓐ | 以 template-hub 当前 `oidc-release.yml` 为底本换掉两个旧工作流 | 完成 | 3071251 |
+| ⓑ | 加 Python 增量：uv、构建与检查、版本形态、`uv publish` | 完成 | 3071251 |
+| ⓒ | 定版本参数：`--force-publish`，正式版加 `--conventional-graduate` | 完成 | 3071251 |
+| ⓓ | lerna 7 → 9.0.7，`engines.node`、`packageManager`、锁文件 | 完成 | 3071251 |
 | ⓔ | 本机试跑两条定版本路径（不发布） | 完成 | 记于下 |
-| ⓕ | `docs/release.md` 按单工作流与可信发布重写 | 完成 | 同上 |
+| ⓕ | `docs/release.md` 按单工作流与可信发布重写 | 完成 | 3071251 |
 | ⓖ | 检查、快照、归档。收工 | 完成 | 归档提交 |
 
 ## 进度记录
@@ -43,5 +43,5 @@ after: ""
 
 ## 交付清单
 
-- 功能提交：工作流、`package.json`、`packages/api/package.json`、锁文件、`docs/release.md`、本批进度。
+- 3071251：工作流、`package.json`、`packages/api/package.json`、锁文件、`docs/release.md`、本批进度。
 - 归档提交：快照与本批归档。
