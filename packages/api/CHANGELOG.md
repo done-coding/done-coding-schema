@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.1-alpha.3](https://github.com/done-coding/done-coding-schema/compare/@done-coding/schema-api@0.0.1-alpha.2...@done-coding/schema-api@0.0.1-alpha.3) (2026-11-27)
+
+### Bug Fixes
+
+- 保留码检查两种语言都比对码的字符串值 ([a95e046](https://github.com/done-coding/done-coding-schema/commit/a95e04628f98b9698db4a413e1ad307e6b3bbf4a))
+- 各种 moduleResolution 下都能解析两个出口的类型声明 ([5bd1784](https://github.com/done-coding/done-coding-schema/commit/5bd1784d639675784f8d3da003ea6e86bea84c5a))
+
+- feat!: 定义的正则各方言同义、条数超限拆成两个错误类型、内置查询参数模型 ([f1b128a](https://github.com/done-coding/done-coding-schema/commit/f1b128ad92977489fe34e6ce635eb80e399deb83))
+
+### BREAKING CHANGES
+
+- 错误类型 items_exceed_page 拆成 items_exceed_page_size
+  与 items_exceed_total_record；结尾带换行、或含 U+FEFF 的值在 Python
+  通用校验器下也判不合法，U+001C、U+0085 在包的模型下按非空白判。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
 ## [0.0.1-alpha.2](https://github.com/done-coding/done-coding-schema/compare/@done-coding/schema-api@0.0.1-alpha.1...@done-coding/schema-api@0.0.1-alpha.2) (2026-11-26)
 
 - feat!: 包内置的码与数值不再成为隐式默认，结构与参考资源分两个出口 ([d13195e](https://github.com/done-coding/done-coding-schema/commit/d13195ebf0fbe309793d29f5c33c31cc6bea3c74))

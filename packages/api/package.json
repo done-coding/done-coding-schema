@@ -1,6 +1,6 @@
 {
   "name": "@done-coding/schema-api",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "跨前后端通用接口结构的类型、常量与定义文件",
   "private": false,
   "main": "lib/index.cjs",
