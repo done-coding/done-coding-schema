@@ -26,8 +26,8 @@ after: ""
 | ⓒ | 子类覆盖嵌套模型字段后导出不写重，required 顺序不变 | 完成 | f1b128a |
 | ⓓ | 内置页码式与游标式查询参数模型，解码规则写进定义 | 完成 | f1b128a、c1d8522 |
 | ⓔ | typesVersions：moduleResolution node 下取得到 ./reference 的类型 | 完成 | 5bd1784 |
-| 发布 | 第四个预发布版：检查、构建、上传、线上核对 | 待做 | |
-| 收口 | 快照、归档。收工 | 待做 | |
+| 发布 | 第四个预发布版：检查、构建、上传、线上核对 | 完成 | 1948a40，见进度记录 |
+| 收口 | 快照、归档。收工 | 完成 | 归档提交 |
 
 ## 进度记录
 
@@ -77,3 +77,38 @@ after: ""
   - 测试：TS 11 个；Python 1245 个，其中 jsonschema 裁判 321 例，pattern 对照 102 例。
   - 构建与类型解析检查通过。
   - 另用 Python 3.10.20 加 pydantic 2.11.10 加 FastAPI 0.140.7 装本机构建的 wheel，1245 个测试全部通过。
+- 2026-11-27 发布（按 `docs/release.md`「本机发布」）：
+  - 定版本：npm 0.0.1-alpha.2 → 0.0.1-alpha.3，Python 0.0.1a2 → 0.0.1a3；版本提交 1948a40，标签 `@done-coding/schema-api@0.0.1-alpha.3`。在版本提交上再跑 `pnpm check`，退出码 0。
+  - 仓外构建：npm 22 个文件，新增 `types/index.d.cts`、`types/reference.d.cts`，package.json 带 typesVersions；wheel 与 sdist 各含 11 份定义与 LICENSE，wheel 含 `_query.py`。三个包解开后扫过，没有本机路径。
+  - 上传：npm `+ @done-coding/schema-api@0.0.1-alpha.3`，命令显式带 `--tag alpha`；PyPI 的 wheel 与 sdist 上传成功。令牌只经环境变量传入，npmrc 里只有占位，用完删除。
+- 2026-11-27 线上核对：
+  - npm dist-tags：`alpha` = 0.0.1-alpha.3，`latest` 仍是 0.0.1-alpha.0（按维护者决定不挪）；线上 shasum 与本机构建相同（b7151184…）。
+  - PyPI 0.0.1a3，sha256 与本机构建相同（wheel c94b1f42…，sdist 0f8bab6a…）。
+  - 空目录（npm @alpha，装到 0.0.1-alpha.3）：README 的 6 段 TS 在 bundler 下 tsc 通过；另建 moduleResolution node 的项目，从 `/reference` 取得到 `PAGED_LIST_REQUEST_PARAMS.pageSize` 的字面量类型，tsc 通过；ESM 与 CJS 的导出核对、Ajv 判派单各例都通过；Ajv 判 requestId 为 `r\n`、`r\ufeff` 都不合法。
+  - 空目录（pip，`--prerelease allow` 装到 0.0.1a3，pydantic 2.14.4，另装 fastapi 0.162.5 与 jsonschema 4.26.0）：
+    - 同一错误体，requestId 为 `r`、`r\n`、`r\ufeff` 时，jsonschema 拿 `load_schema` 的定义判与 `ErrorBody` 判结论相同（合法、不合法、不合法）；
+    - 条数同时超两种上限时报 `items_exceed_page_size` 与 `items_exceed_total_record`；
+    - `PagedListQuery` 解码 `page.page=2`、`page.pageSize=20` 为整数并忽略前缀外参数，`02`、`+2`、` 2`、`2.0`、`1e1`、空串全拒；
+    - README 的 Python 片段原样运行通过，`OrderQuery` 的 OpenAPI 参数名为四个线上名，pageSize 的说明为 `minimum: 1`、`maximum: 50`、`default: 20`，不含 `anyOf` 与 `ge`。
+- 2026-11-27 快照替换（`SNAPSHOT.md`）：
+  - npm-package / pypi-package 两行：版本更新到 alpha.3 / a3，并写明 latest 不挪；pypi-package 补 `_query.py`。
+  - toolchain 一行：补上类型解析检查与生成器的 pattern 转换。
+  - 标注一条：补 `x-queryIntegerPattern`。
+  - 「Python 与定义的一致性」一条：补 jsonschema 第三个裁判与 errorType。
+  - 版本一条改为 alpha.3。
+  - 技术基线：npm 构建补 d.cts 与 typesVersions；「正则一律按 ECMA-262 语义（`$` 只匹配文本末尾）」改为各方言同义的写法与生成器的转换。
+  - 移出的历史内容：无。
+- 收工。推送仍由维护者本人做：分支 `master`、`feat/schema-v0`，标签 `@done-coding/schema-api@0.0.1-alpha.0` 至 `0.0.1-alpha.3`。
+
+## 交付清单
+
+- f1b128a：ⓐⓑⓒⓓ（定义、生成器、校验器、Python 包与测试）。
+- c1d8522：README。
+- 5bd1784：ⓔ（typesVersions、d.cts、类型解析检查）。
+- 5ab4d14：实现进度记录。
+- 1948a40：版本提交（0.0.1-alpha.3 / 0.0.1a3）。
+- 归档提交：快照与本批归档。
+
+## 结果
+
+- 第四个预发布版已在 npm（alpha）与 PyPI 发布，空目录各装一次验证通过。
