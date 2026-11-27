@@ -166,7 +166,21 @@ HTTP JSON 接口里前后端都要认的通用结构：成功外壳、错误体�
 
 包里的码和数值都不会自己生效。要用，就在自己的代码里写出来：引用包里的参考值，或写自己的值。
 
-**每页条数的默认值与上限**（Python）：子类重新声明字段，整数字段用包里的 `JsonInt`（与定义一样认 `12` 和 `12.0`）。子类只能收紧：定义对该字段的约束（这里是至少 1）照常生效，不必重写，写了更宽的也放不宽。包体结构（成功外壳、错误体、三种列表、专有码清单及其嵌套）不能改线上字段名，设了别名的子类在定义时就报错；只有查询参数模型（`PagedListRequest`、`CursorListRequest`）可以按前缀改名（线上名只能是原名或 `page.原名`、`cursor.原名`），见下面「用作查询参数」。不要用校验器或序列化器自己改线上键名：这种写法绕过了上面的检查，导出的结构也不会反映。能不能新增字段以定义为准：三种列表的顶层允许接口自己声明附带字段（如 `summary`），子类可以加，导出与运行时都认；其余结构的定义不接受未声明的字段，子类新增字段在定义时就报错。
+**Python 子类：包保证什么**
+
+- **包自己的模型**：定义、导出的 JSON Schema（`model_json_schema()`、FastAPI 生成的 OpenAPI）、运行时校验三者同结论。这是硬保证，由测试逐例核对。
+- **使用方子类，只保证下面这几种写法**，在这些写法下导出与运行时同结论，有测试：
+  1. 重新声明已有字段，收紧上下界、加默认值、收窄取值（如 `Literal`）。定义对该字段的约束照常生效，不必重写，写了更宽的也放不宽。整数字段用 `JsonInt`（与定义一样认 `12` 和 `12.0`）。
+  2. 在三种列表的顶层（`BoundedList`、`PagedList`、`CursorList`）新增附带字段（如 `summary`）；定义写明不得出现的名字（如页码式列表的 `cursor`）除外。
+  3. 查询参数：用内置的 `PagedListQuery` / `CursorListQuery`（已按前缀命名，不用自己改名），在子类里新增前缀外的参数。
+  4. 继承参数化的泛型，如 `class UserPage(PagedList[User])`。
+- **其余写法一律不支持**，导出与运行时可能不一致，由使用方自负。类定义时的检查（改线上字段名、在封闭结构上新增字段等会报错）只是尽力而为的提醒，不是保证。明确不支持的做法：
+  - 改 `model_config`（`extra`、`strict`、别名相关开关等）；
+  - `computed_field`；
+  - 用校验器或序列化器改键名；
+  - 单独设 `validation_alias`。
+
+**每页条数的默认值与上限**（Python）：用上面第 1 种写法，子类重新声明字段：
 
 ```python
 from pydantic import Field
@@ -194,7 +208,7 @@ class AuditPageRequest(PagedListRequest):
 - 线上名固定为「前缀.字段名」：`page.page`、`page.pageSize`、`page.query`、`page.orderBy`、`cursor.after`、`cursor.limit`。写成与字段同名的裸名（如 `?pageSize=50`）会报错并指出应写的线上名（「pageSize 应写作 page.pageSize」，HTTP 下是 422），不会静默用默认值；前缀下未声明的参数（如 `page.limit`）不合法；其余参数不归它管，忽略；
 - 整数参数只收十进制数字串（定义里的 `x-queryIntegerPattern`：`0` 或不以 0 开头的数字），解码后再按定义的上下界校验；`02`、`+2`、` 2`、`2.0`、`1e1`、空串都拒；
 - 继承它声明自己的默认值与上限，规则同上（子类只能收紧），不必再写别名与解码；
-- 接口自己的其他查询参数（如 `status`、`minAmount`）也声明在同一个子类里：线上名就是字段名，在前缀之外，按子类自己的声明校验，不走前缀与整数解码。不能新增前缀下的字段（如 `page.foo`），也不能与上面的裸名同名。查询串的值都是字符串，整数参数要允许从字符串转换（`Field(strict=False)`）。
+- 接口自己的其他查询参数（如 `status`、`minAmount`）也声明在同一个子类里：线上名就是字段名，在前缀之外，按子类自己的声明校验，不走前缀与整数解码。不能新增前缀下的字段（如 `page.foo`），也不能与上面的裸名同名。前缀外的整数参数用包里的 `QueryInt`，与前缀内的整数同一套写法（`02`、`+2` 等同样拒）；前缀外其他类型（如布尔）的解码规则由使用方自己的声明决定。
 
 ```python
 from typing import Annotated, Any
@@ -202,13 +216,13 @@ from typing import Annotated, Any
 from fastapi import FastAPI, Query
 from pydantic import Field
 
-from done_coding_schema_api import JsonInt, PagedListQuery
+from done_coding_schema_api import JsonInt, PagedListQuery, QueryInt
 
 
 class OrderQuery(PagedListQuery):
     pageSize: JsonInt = Field(default=20, le=50)
     status: str | None = None  # 接口自己的参数：?status=paid
-    minAmount: Annotated[int | None, Field(strict=False, ge=0)] = None
+    minAmount: Annotated[QueryInt | None, Field(ge=0)] = None  # ?minAmount=100
 
 
 app = FastAPI()

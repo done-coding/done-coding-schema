@@ -24,7 +24,7 @@ class User(BaseModel):
 UserPage = SuccessEnvelope[PagedList[User]]  # 可直接用作接口的返回类型
 ```
 
-模型是严格类型的，结构里的跨字段约束（如 `totalPage` 等于 `ceil(totalRecord / pageSize)`）也已包含在内；校验报错指到具体字段。`model_json_schema()` 与 FastAPI 生成的 OpenAPI 导出的就是定义本身；子类重新声明字段只能收紧，导出的是定义与子类声明的交集，运行时同样两者都检查；包体结构的子类不能改线上字段名，只有查询参数模型可以按前缀改名；不要用校验器或序列化器自己改线上键名，导出不会反映。子类里的整数字段用 `JsonInt`（认 `12` 与 `12.0`）。包里另带 JSON Schema 定义文件：`schema_path("error-body")` 取路径，`load_schema("error-body")` 取已解析的字典。
+模型是严格类型的，结构里的跨字段约束（如 `totalPage` 等于 `ceil(totalRecord / pageSize)`）也已包含在内；校验报错指到具体字段。`model_json_schema()` 与 FastAPI 生成的 OpenAPI 导出的就是定义本身；包自己的模型保证定义、导出、运行时三者同结论；使用方子类只保证仓库 README「Python 子类：包保证什么」列出的几种写法（收紧已有字段、在列表顶层加附带字段、查询参数子类加前缀外参数、继承参数化泛型），其余写法不支持。子类里的整数字段用 `JsonInt`（认 `12` 与 `12.0`），查询参数里前缀外的整数用 `QueryInt`。包里另带 JSON Schema 定义文件：`schema_path("error-body")` 取路径，`load_schema("error-body")` 取已解析的字典。
 
 查询参数用内置的 `PagedListQuery` / `CursorListQuery`：线上名为 `page.pageSize` 这类「前缀.字段名」，整数按十进制数字串解码，可继承收紧，FastAPI 里写 `Annotated[PagedListQuery, Query()]`。
 
